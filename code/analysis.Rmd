@@ -1,0 +1,287 @@
+---
+title: "protest legitimacy"
+author: "Travis Riddle"
+date: "3/8/2019"
+output: pdf_document
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(stringr)
+library(dplyr)
+library(forcats)
+library(ggplot2)
+library(tidytext)
+library(tidyr)
+library(fuzzyjoin)
+library(cowplot)
+library(brms)
+library(tidybayes)
+
+options(mc.cores = parallel::detectCores())
+
+df_arts <- read.csv('/Users/travis/Documents/gits/protest_legitimacy/data/art_titles.csv')
+df_caps <- read.csv('/Users/travis/Documents/gits/protest_legitimacy/data/img_caps.csv')
+df_sources <- read.csv('/Users/travis/Documents/gits/protest_legitimacy/data/source_estimates_mturk.csv')
+df_audience <- read.csv('/Users/travis/Documents/gits/protest_legitimacy/data/source_audience.csv')
+
+df_arts %>% 
+  mutate(ArticleID = str_trim(ArticleID)) -> df_arts
+
+df_caps %>%
+  mutate(PictureType = str_trim(PictureType)) %>%
+  mutate(ArticleID = str_trim(ArticleID)) %>%
+  mutate(PictureType=fct_collapse(PictureType,
+                                  featured = c('Feature', 'Featured'))) %>%
+  filter(PictureType=='featured') -> featured_imgs
+
+df_sources %>%
+  mutate(trust_effect_z = (trust_effect - mean(trust_effect))/sd(trust_effect),
+         consumption_effect_z = 
+           (consumption_effect - mean(consumption_effect))/
+           sd(consumption_effect)) -> df_sources
+```
+
+This is the first pass at the analyses registered on the [OSF](https://osf.io/sd58n/). The first pass is some descriptives of the dataset we are working with.
+
+## Descriptives
+All of the data we are working with are drawn from press coverage of the shooting Michael Brown and subsequent protests. We targeted the top 50 news organizations and the top 18 African American news organizations, as indicated by Pew Research. For each of these sources, our final data includes any article in the 10 days after the shooting that mentions Michael Brown, along with all pictures published within that article. For this work, we are focusing on the titles of these articles, and the captions for the *featured* images within the articles. Featured images are those that appear in the text of the version of the article published online (as opposed to images that are published as part of a gallery that is linked to within an article).
+
+In total, this work covers `r length(df_arts$ArticleID)` articles and `r length(featured_imgs$PictureID)` images, though `r sum(is.na(featured_imgs$CaptionText))` images do not have a caption. 
+
+As part of this work, we are also using the political leaning of these news sources. We use the same political orientation estimates as in previous work. The distribution of political orientation is displayed below (Note that some sources are missing here, though I can't recall what the reason was... We have 64 source ratings.)
+
+
+```{r source-dist}
+ggplot(df_sources, aes(x=trust_effect)) + 
+  geom_histogram(bins=20) +
+  xlab('Political Leaning\n(positive=conservative)')
+```
+
+Note that this distribution is a little difficult. Effectively we only have three sources that have conservative ratings (TheBlaze, The Daily Mail, and Fox News), with the vast majority of sources having a moderately liberal bent. This makes assessing the effect of political leaning difficult, but also seems like it's an accurate reflection of the media landscape (especially at the time of the shooting).
+
+## Police/Protest frequency
+
+```{r police-prot, echo=FALSE}
+df_arts %>%
+  select(Source, ArticleID) %>%
+  right_join(featured_imgs) -> featured_imgs
+
+df_arts %>%
+  select(Source, ArticleID, Title) %>%
+  mutate(ID = ArticleID,
+         text = Title,
+         type = 'Title') %>%
+  select(Source, ID, text, type) -> df_arts
+
+featured_imgs %>%
+  select(Source, PictureID, CaptionText) %>%
+  mutate(ID = PictureID,
+         text = CaptionText,
+         type = 'Caption') %>%
+  select(Source, ID, text, type) %>%
+  mutate(text = as.character(text)) %>%
+  mutate(text = gsub('law enforcement', 'law_enforcement', text, ignore.case=T)) %>%
+  rbind(df_arts) -> df
+
+df %>%
+  unnest_tokens(word, text) -> tidy_articles
+
+police_words <- data.frame(word = c('police.+?', 'cop.+?', 'officer.+?', 
+                                    'trooper.+?', 'law_enforcement', 
+                                    'patrolman', 'patrolmen', 'lawman', 
+                                    'lawmen'),
+                           police_ref = rep(1, 9))
+
+protest_words <- data.frame(word = c('protest.+?', 'riot.+?', 'unrest.+?', 
+                                     'loot.+?', 'demonstrat.+?', 'march.+?', 
+                                     'uprising'),
+                            protest_ref = rep(1, 7))
+
+tidy_articles %>%
+  regex_left_join(police_words) %>%
+  mutate(word = word.x) %>%
+  select(-word.x, -word.y) %>%
+  regex_left_join(protest_words) %>%
+  mutate(word = word.x) %>%
+  select(-word.x, -word.y) %>%
+  replace_na(list(police_ref = 0,
+                  protest_ref = 0)) %>%
+  group_by(Source, ID, type) %>%
+  summarise(police_ref = max(police_ref),
+            protest_ref = max(protest_ref)) -> scored_dat
+
+scored_dat %>%
+  ungroup() %>%
+  group_by(Source) %>%
+  summarise(prop_police = sum(police_ref)/n(),
+            prop_protest = sum(protest_ref)/n(),
+            number = n()) %>%
+  ungroup() -> plot.dat1
+
+scored_dat %>%
+  ungroup() %>%
+  mutate(prop_police = sum(police_ref)/n(),
+         prop_protest = sum(protest_ref)/n()) %>%
+  select(prop_police, prop_protest) %>%
+  distinct() -> plot.dat2
+
+plot.dat1 %>%
+  ggplot(aes(x=fct_reorder(Source, prop_police), y=prop_police)) + 
+  geom_point() +
+  coord_flip() +
+  ylab('Proportion of texts with\npolice references') +
+  xlab('') -> police
+  
+plot.dat1 %>%
+  ggplot(aes(x=fct_reorder(Source, prop_protest), y=prop_protest)) + 
+  geom_point() +
+  coord_flip() +
+  ylab('Proportion of texts with\nprotest references') +
+  xlab('') -> protest
+
+plot_grid(police, protest)
+
+```
+
+Figure XXX shows the proportion of texts (the union of captions and titles) that contain references to either police or protest. One can see that the proportions vary across sources, and level varies between police and protest references. Indeed, the proportion of all texts that refer to police is about `r round(plot.dat2$prop_police, 2)`, while the proportion of texts that refer to protest is about `r round(plot.dat2$prop_protest, 2)`.
+
+```{r mlm-audience-PolOrient}
+scored_dat %>%
+  left_join(df_sources) %>%
+  left_join(df_audience) %>%
+  ungroup() -> mod.dat
+
+m_pol <- brm(police_ref~trust_effect_z + Demog + (1|Source), data=mod.dat,
+             prior = set_prior("normal(0,5)", class = "b"),
+             family='bernoulli')
+
+m_prot <- brm(protest_ref~trust_effect_z + Demog + (1|Source), data=mod.dat,
+             prior = set_prior("normal(0,5)", class = "b"),
+             family='bernoulli')
+
+police_model_mat <- as.matrix(m_pol)
+
+protest_model_mat <- as.matrix(m_prot)
+
+m_pol %>%
+  spread_draws(b_trust_effect_z) %>%
+  median_hdi() -> police_trust_slope
+
+m_prot %>%
+  spread_draws(b_trust_effect_z) %>%
+  median_hdi() -> protest_trust_slope
+
+mod.dat %>% 
+  modelr::data_grid(trust_effect_z=c(0,1), Demog) %>%
+  add_fitted_draws(m_pol, allow_new_levels=T, re_formula = NA, transform=T) %>%
+  median_hdi() -> police_preds
+
+mod.dat %>% 
+  modelr::data_grid(trust_effect_z=c(0,1), Demog) %>%
+  add_fitted_draws(m_prot, allow_new_levels=T, re_formula = NA, transform=T) %>%
+  median_hdi() -> protest_preds
+
+mod.dat %>% 
+  modelr::data_grid(trust_effect_z=0, Demog) %>%
+  add_fitted_draws(m_pol, allow_new_levels=T, re_formula = NA, transform=T) %>%
+  ggplot(aes(y=Demog, x=.value)) + 
+  geom_halfeyeh() +
+  ylab('') +
+  xlab('Probability') +
+  xlim(0, .45) -> pol_demog_plot
+
+mod.dat %>% 
+  modelr::data_grid(trust_effect_z=0, Demog) %>%
+  add_fitted_draws(m_prot, allow_new_levels=T, re_formula = NA, transform=T) %>%
+  ggplot(aes(y=Demog, x=.value)) + 
+  geom_halfeyeh() +
+  ylab('') +
+  xlab('') +
+  xlim(0, .45) -> prot_demog_plot
+
+mod.dat %>% 
+  modelr::data_grid(trust_effect_z=0, Demog) %>%
+  add_fitted_draws(m_pol, allow_new_levels=T, re_formula = NA, transform=T) %>%
+  ggplot(aes(y=Demog, x=.value)) + 
+  geom_halfeyeh() +
+  ylab('') +
+  xlab('Probability') +
+  xlim(0, .45) -> pol_demog_plot
+
+trust_min <- min(mod.dat$trust_effect_z, na.rm=T)
+trust_max <- max(mod.dat$trust_effect_z, na.rm=T)
+
+mod.dat %>% 
+  modelr::data_grid(trust_effect_z=seq(trust_min, trust_max, .1), Demog='General-public') %>%
+  add_fitted_draws(m_prot, allow_new_levels=T, re_formula = NA, transform=T) %>%
+  ggplot(aes(x=trust_effect_z, y=.value)) + 
+  stat_lineribbon() +
+  xlab('') +
+  ylab('Probability') +
+  scale_fill_brewer(palette='Greys') +
+  ylim(0, .5) +
+  theme(legend.position='bottom') -> prot_trust_plot
+
+mod.dat %>% 
+  modelr::data_grid(trust_effect_z=seq(trust_min, trust_max, .1), Demog='General-public') %>%
+  add_fitted_draws(m_pol, allow_new_levels=T, re_formula = NA, transform=T) %>%
+  ggplot(aes(x=trust_effect_z, y=.value)) + 
+  stat_lineribbon() +
+  xlab('Political Leaning') +
+  ylab('Probability') +
+  scale_fill_brewer(palette='Greys') +
+  ylim(0, .5) +
+  theme(legend.position='none') -> pol_trust_plot
+
+cowplot::plot_grid(prot_demog_plot, prot_trust_plot, pol_demog_plot, pol_trust_plot, labels = c('Protest', '', 'Police', ''), rel_widths =c(.75, 1) )
+
+```
+
+Results are reported using the median and 95% highest density intervals from the posterior distribution. Figure XXX shows how the modeled probabilities vary as a function of political leaning (right column) and source audience (left column). These models indicate that sources that are oriented to the general public have higher rates of reference to both protest-related words ($p_{general public}$ = `r round(protest_preds$.value[2], 2)`, [`r round(protest_preds$.lower[2], 2)`, `r round(protest_preds$.upper[2], 2)`]; $p_{african american}$ = `r round(protest_preds$.value[1], 2)`, [`r round(protest_preds$.lower[1], 2)`, `r round(protest_preds$.upper[1], 2)`], $prob_{gp>aa}$ > .99) and for police-related words ($p_{general public}$ = `r round(police_preds$.value[2], 2)`, [`r round(police_preds$.lower[2], 2)`, `r round(police_preds$.upper[2], 2)`]; $p_{african american}$ = `r round(police_preds$.value[1], 2)`, [`r round(police_preds$.lower[1], 2)`, `r round(police_preds$.upper[1], 2)`], $prob_{gp>aa}$ > .99).
+
+The associaton between political leaning and references to these concepts is not as directionally consistent. For both protest ($\beta$ = `r round(protest_trust_slope$b_trust_effect_z, 2)`, [`r round(protest_trust_slope$.lower, 2)`, `r round(protest_trust_slope$.upper, 2)`]) and police references ($\beta$ = `r round(police_trust_slope$b_trust_effect_z, 2)`, [`r round(police_trust_slope$.lower, 2)`, `r round(police_trust_slope$.upper, 2)`]), we are unable to rule out zero as a probable value.
+
+```{r spotlight1}
+df_sources %>% 
+  arrange(trust_effect_z) %>% 
+  slice(1:3, 62:64) %>%
+  select(Source, trust_effect_z) -> spotlight_sources
+
+plot.dat1 %>%
+  filter(Source %in% spotlight_sources$Source) -> obs_props
+
+mod.dat %>%
+  filter(Source %in% spotlight_sources$Source) %>%
+  select(Source, type, trust_effect_z, Demog) %>%
+  distinct() %>%
+  add_fitted_draws(m_prot, allow_new_levels=T, transform=T) %>%
+  ggplot(aes(y=reorder(Source, trust_effect_z), x=.value)) + 
+  stat_intervalh(.width = c(.50, .80, .95, .99)) +
+  scale_color_brewer() +
+  geom_point(aes(x=prop_protest, y=Source, size=number), data=obs_props) +
+  ylab('') +
+  xlab('probability') -> prot_plot
+
+mod.dat %>%
+  filter(Source %in% spotlight_sources$Source) %>%
+  select(Source, type, trust_effect_z, Demog) %>%
+  distinct() %>%
+  add_fitted_draws(m_pol, allow_new_levels=T, transform=T) %>%
+  ggplot(aes(y=reorder(Source, trust_effect_z), x=.value)) + 
+  stat_intervalh(.width = c(.50, .80, .95, .99)) +
+  scale_color_brewer() +
+  geom_point(aes(x=prop_police, y=Source, size=number), data=obs_props) +
+  ylab('') +
+  xlab('probability') -> pol_plot
+
+get_legend()
+
+plot_grid(prot_plot, pol_plot, labels=c('Protest', 'Police'), ncol=1)
+
+```
+
+The our spotlight analysis focuses on the three most conservative and three most liberal sources. These are (from most conservative to most liberal) Fox News (standardized lean score = `r round(spotlight_sources$trust_effect_z[6], 2)`), The Blaze (`r round(spotlight_sources$trust_effect_z[5], 2)`), The Daily Mail (`r round(spotlight_sources$trust_effect_z[4], 2)`), The Washington Post (`r round(spotlight_sources$trust_effect_z[3], 2)`), The New York Times (`r round(spotlight_sources$trust_effect_z[2], 2)`), and CNN (`r round(spotlight_sources$trust_effect_z[1], 2)`). Figure XXX shows the observed proportion of texts that contain references to protest or police, along with the range of modeled credible probabilities predicted by the model. One can see that the predicted probabilities generally correspond to the observed data, though it appears the predicted probabilities for Police references are slightly over estimated for Fox News and the Washington Post.
+
+** Pulls some example texts for illustration here **
