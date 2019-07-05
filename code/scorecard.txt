@@ -1,0 +1,35 @@
+A2.														GP>AA 		Cons>lib
+	protest text										TRUE		-
+	police text											TRUE		TRUE
+
+A4.
+	riot/loot											TRUE		-
+	protest images 										TRUE		-
+	police images										TRUE		-
+
+B3.
+	blackness/innocence/youth/MB/murder + MB pix		FALSE		TRUE
+
+B4.
+	blackness/innocence/youth/mb/murder					FALSE		TRUE
+
+B5.
+	MB pix												-			-
+
+B6.
+	Active kill words									-			TRUE
+
+B7. 
+	factor analysis		
+		MB death										FALSE		-
+		salacious death									TRUE		-
+		race/age										-			-
+
+B10
+	total number of bl/in/yth/mb/murder + mb pix		FALSE		-
+	total active kill words								-			TRUE
+
+C1.
+	police/protest over time
+	police/protest images over time
+	B10 over time
