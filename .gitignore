@@ -1,2 +1,6 @@
 data/*
 output/*
+
+**/.DS_Store
+
+**/*.log
