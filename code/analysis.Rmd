@@ -1886,8 +1886,8 @@ mod.dat %>%
             prot_ref_prop = mean(protest_ref),
             neg_protest_ref_prop = mean(neg_protest_ref)) -> cor_dat
 
-write.csv(cor_dat, file = '/Users/travis/Desktop/source_level.csv', row.names = F)
-write.csv(mod.dat, file = '/Users/travis/Desktop/document_level.csv', row.names=F)
+write.csv(cor_dat, file = '../output/source_level_cors.csv', row.names = F)
+write.csv(mod.dat, file = '../output/document_level_cors.csv', row.names=F)
 
 M <- cor(cor_dat[,2:13], use='complete.obs')
 
