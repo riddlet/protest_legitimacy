@@ -97,7 +97,11 @@ featured_imgs %>% # select Captions and mutate into shape for merging
          type = 'Caption') %>%
   select(Source, ID, text, type) %>%
   mutate(text = as.character(text)) %>%
-  rbind(df_arts) %>% # bind to Titles
+  rbind(df_arts) -> all_texts # bind to Titles
+
+saveRDS(all_texts, '../output/texts.RDS')
+
+all_texts %>%
   mutate(text = gsub('law enforcement', 
                      'law_enforcement', text, ignore.case=T)) -> df # save to df
 
@@ -179,13 +183,24 @@ scored_dat %>%
 
 # m_pol <- brm(police_ref~trust_effect_z + Demog + (1|Source), data=mod.dat,
 #              prior = set_prior("normal(0,5)", class = "b"),
-#              family='bernoulli')
+#              family='bernoulli', save_all_pars=T)
+# 
+# m_pol2 <- brm(police_ref~trust_effect_z + Demog2 + (1|Source), data=mod.dat,
+#               prior = set_prior("normal(0,5)", class = "b"),
+#               family='bernoulli', save_all_pars=T)
+# bf_pol <- bayes_factor(m_pol, m_pol2) #23.16
 # 
 # m_prot <- brm(protest_ref~trust_effect_z + Demog + (1|Source), data=mod.dat,
 #              prior = set_prior("normal(0,5)", class = "b"),
-#              family='bernoulli')
+#              family='bernoulli', save_all_pars=T)
+# m_prot2 <- brm(protest_ref~trust_effect_z + Demog2 + (1|Source), data=mod.dat,
+#              prior = set_prior("normal(0,5)", class = "b"),
+#              family='bernoulli', save_all_pars=T)
+# bf_prot <- bayes_factor(m_prot, m_prot2) #1.46
 # saveRDS(m_pol, '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_pol.RDS')
 # saveRDS(m_prot, '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_prot.RDS')
+# saveRDS(m_pol2, '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_pol2.RDS')
+# saveRDS(m_prot2, '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_prot2.RDS')
 m_pol <- readRDS('../output/tempmod_pol.RDS')
 m_prot <- readRDS('../output/tempmod_prot.RDS')
 
@@ -281,6 +296,17 @@ plotcol2 <- plot_grid(prot_trust_plot + theme(legend.position='none'),
                       pol_trust_plot + theme(legend.position='none'),
                       ncol=1)
 
+protest_preds %>%
+  ungroup() %>%
+  mutate(measure='Protest',
+         document='captions+titles') -> plotting_data
+
+police_preds %>%
+  ungroup() %>%
+  mutate(measure='Police',
+         document='captions+titles') %>%
+  rbind(plotting_data) -> plotting_data
+
 cowplot::plot_grid(plotcol1, plotcol2, legend, 
                    nrow=1, rel_widths =c(.75, 1, .2) )
 
@@ -329,12 +355,10 @@ mod.dat %>% #filter out all AA oriented source
 #Rerun the models
 # m_pol_genpub <- brm(police_ref ~ trust_effect_z + (1|Source), data=mod.dat.genpub,
 #                     prior = set_prior("normal(0,5)", class = "b"),
-#                     family='bernoulli', iter = 6000)
-# 
+#                     family='bernoulli')
 # m_prot_genpub <- brm(protest_ref ~ trust_effect_z + (1|Source), data=mod.dat.genpub,
 #                      prior = set_prior("normal(0,5)", class = "b"),
-#                      family='bernoulli', iter = 6000)
-
+#                      family='bernoulli')
 # saveRDS(m_pol_genpub, '../output/tempmod_pol_genpub.RDS')
 # saveRDS(m_prot_genpub, '../output/tempmod_prot_genpub.RDS')
 
@@ -350,14 +374,14 @@ m_prot_genpub %>%
   spread_draws(b_trust_effect_z) %>%
   median_hdi() -> protest_trust_slope_genpub
 
-# model text type (title vs. caption)
-# m_prot_TvC <- brm(protest_ref ~ trust_effect_z + Demog + type + (type|Source), data=mod.dat,
-#                      prior = set_prior("normal(0,5)", class = "b"),
-#                      family='bernoulli', iter = 6000)
+# # model text type (title vs. caption)
+# m_prot_TvC <- brm(protest_ref ~ trust_effect_z + Demog + type + (type|Source),
+#                   data=mod.dat, prior = set_prior("normal(0,5)", class = "b"),
+#                   family='bernoulli')
 # 
-# m_pol_TvC <- brm(police_ref ~ trust_effect_z + Demog + type + (type|Source), data=mod.dat,
-#                     prior = set_prior("normal(0,5)", class = "b"),
-#                     family='bernoulli', iter = 6000)
+# m_pol_TvC <- brm(police_ref ~ trust_effect_z + Demog + type + (type|Source),
+#                  data=mod.dat, prior = set_prior("normal(0,5)", class = "b"),
+#                  family='bernoulli')
 # 
 # saveRDS(m_prot_TvC, '../output/tempmod_prot_TvC.RDS')
 # saveRDS(m_pol_TvC, '../output/tempmod_pol_TvC.RDS')
@@ -519,12 +543,19 @@ scored_dat %>%
   left_join(df_audience) %>%
   ungroup() -> mod.dat
 
-# m_prot_neg <- brm(neg_protest_ref~trust_effect_z + Demog + (1|Source), 
+# m_prot_neg <- brm(neg_protest_ref~trust_effect_z + Demog + (1|Source),
 #                   data=mod.dat, prior = set_prior("normal(0,5)", class = "b"),
-#                   family='bernoulli')
-
-# saveRDS(m_prot_neg, 
+#                   family='bernoulli', save_all_pars = T)
+# m_prot_neg2 <- brm(neg_protest_ref~trust_effect_z + Demog2 + (1|Source),
+#                   data=mod.dat, prior = set_prior("normal(0,5)", class = "b"),
+#                   family='bernoulli', save_all_pars = T)
+# bf_prot_neg <- bayes_factor(m_prot_neg, m_prot_neg2) #4.41
+# 
+# saveRDS(m_prot_neg,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_prot_neg.RDS')
+# saveRDS(m_prot_neg2,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_prot_neg2.RDS')
+
 m_prot_neg <- readRDS('../output/tempmod_prot_neg.RDS')
 
 neg_protest_model_mat <- as.matrix(m_prot_neg)
@@ -576,6 +607,11 @@ mod.dat %>%
         legend.title=element_text(size=10),
         legend.text = element_text(size=8)) -> neg_prot_trust_plot
 
+neg_protest_preds %>%
+  ungroup() %>%
+  mutate(measure='Negative Protest',
+         document='captions+titles') %>%
+  rbind(plotting_data) -> plotting_data
 
 cowplot::plot_grid(neg_prot_demog_plot, neg_prot_trust_plot,
                    nrow=1, rel_widths =c(.7, 1) )
@@ -615,9 +651,10 @@ mod.dat %>% #filter out all AA oriented source
   filter(Demog == "General-public") -> mod.dat.genpub
 
 #Rerun the model
-# m_prot_neg_genpub <- brm(neg_protest_ref ~ trust_effect_z + (1|Source), data=mod.dat.genpub,
+# m_prot_neg_genpub <- brm(neg_protest_ref ~ trust_effect_z + (1|Source),
+#                          data=mod.dat.genpub,
 #                          prior = set_prior("normal(0,5)", class = "b"),
-#                          family='bernoulli', iter = 6000)
+#                          family='bernoulli')
 # 
 # saveRDS(m_prot_neg_genpub, '../output/tempmod_prot_neg_genpub.RDS')
 
@@ -628,10 +665,10 @@ m_prot_neg_genpub %>%
   spread_draws(b_trust_effect_z) %>%
   median_hdi() -> neg_protest_trust_slope_genpub
 
-# model text type (title vs. caption)
+#model text type (title vs. caption)
 # m_prot_neg_TvC <- brm(neg_protest_ref ~ trust_effect_z + Demog + type + (type|Source), data=mod.dat,
 #                       prior = set_prior("normal(0,5)", class = "b"),
-#                       family='bernoulli', iter = 6000)
+#                       family='bernoulli', iter = 4000)
 # 
 # saveRDS(m_prot_neg_TvC, '../output/tempmod_prot_neg_TvC.RDS')
 
@@ -663,19 +700,34 @@ featured_imgs %>%
 # m_pol_img <- brm(Police~trust_effect_z + Demog + (1|Source),
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli')
+#                  family='bernoulli', save_all_pars = T)
+# m_pol_img2 <- brm(Police~trust_effect_z + Demog2 + (1|Source),
+#                  data=mod.dat,
+#                  prior = set_prior("normal(0,5)", class = "b"),
+#                  family='bernoulli', save_all_pars = T)
+# bf_pol_img <- bayes_factor(m_pol_img, m_pol_img2) #30.46
 # 
 # saveRDS(m_pol_img,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_pol_img.RDS')
+# saveRDS(m_pol_img2,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_pol_img2.RDS')
 m_pol_img <- readRDS('../output/tempmod_pol_img.RDS')
 
 # m_prot_img <- brm(Protest~trust_effect_z + Demog + (1|Source),
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli')
+#                  family='bernoulli', save_all_pars = T)
+# m_prot_img2 <- brm(Protest~trust_effect_z + Demog2 + (1|Source),
+#                  data=mod.dat,
+#                  prior = set_prior("normal(0,5)", class = "b"),
+#                  family='bernoulli', save_all_pars = T)
+# bf_prot_img <- bayes_factor(m_prot_img, m_prot_img2) #23.83
 # 
 # saveRDS(m_prot_img,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_prot_img.RDS')
+# saveRDS(m_prot_img2,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_prot_img2.RDS')
+
 m_prot_img <- readRDS('../output/tempmod_prot_img.RDS')
 
 police_model_mat <- as.matrix(m_pol_img)
@@ -766,6 +818,18 @@ mod.dat %>%
         legend.title=element_text(size=10),
         legend.text = element_text(size=8)) -> pol_trust_plot
 
+protest_preds %>%
+  ungroup() %>%
+  mutate(measure='Protest',
+         document='photos') %>%
+  rbind(plotting_data) -> plotting_data
+
+police_preds %>%
+  ungroup() %>%
+  mutate(measure='Police',
+         document='photos') %>%
+  rbind(plotting_data) -> plotting_data
+
 legend <- get_legend(pol_trust_plot)
 
 plotcol1 <- plot_grid(prot_demog_plot, pol_demog_plot, 
@@ -813,11 +877,11 @@ mod.dat %>% filter(Demog=='General-public') -> mod.dat.genpub
 
 # m_pol_genpub <- brm(Police~trust_effect_z + (1|Source), data=mod.dat.genpub,
 #                     prior = set_prior("normal(0,5)", class = "b"),
-#                     family='bernoulli', iter = 6000)
+#                     family='bernoulli', iter = 4000)
 # 
 # m_prot_genpub <- brm(Protest~trust_effect_z + (1|Source), data=mod.dat.genpub,
 #                      prior = set_prior("normal(0,5)", class = "b"),
-#                      family='bernoulli', iter = 6000)
+#                      family='bernoulli', iter = 4000)
 # # save models
 # saveRDS(m_pol_genpub, '../output/tempmod_pol_img_genpub.RDS')
 # saveRDS(m_prot_genpub, '../output/tempmod_prot_img_genpub.RDS')
@@ -926,10 +990,17 @@ scored_dat %>%
 # m_combined <- brm(any_ref~trust_effect_z + Demog + (1|Source),
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli')
-# 
+#                  family='bernoulli', save_all_pars = T)
+# m_combined2 <- brm(any_ref~trust_effect_z + Demog2 + (1|Source),
+#                  data=mod.dat,
+#                  prior = set_prior("normal(0,5)", class = "b"),
+#                  family='bernoulli', save_all_pars = T)
+# bf_combined <- bayes_factor(m_combined, m_combined2)
+
 # saveRDS(m_combined,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/combined_img_text.RDS')
+# saveRDS(m_combined2,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/combined_img_text2.RDS')
 m_combined <- readRDS('../output/combined_img_text.RDS')
 
 combined_model_mat <- as.matrix(m_combined)
@@ -980,6 +1051,12 @@ mod.dat %>%
         legend.title=element_text(size=10),
         legend.text = element_text(size=8)) -> combined_trust_plot
 
+combined_preds %>%
+  ungroup() %>%
+  mutate(measure='Legitimizing',
+         document='captions+titles+photos') %>%
+  rbind(plotting_data) -> plotting_data
+
 legend <- get_legend(combined_trust_plot)
 
 cowplot::plot_grid(combined_demog_plot, 
@@ -1001,7 +1078,7 @@ mod.dat %>% filter(Demog == 'General-public') -> mod.dat.genpub
 # m_combined_genpub <- brm(any_ref~trust_effect_z + (1|Source),
 #                          data=mod.dat.genpub,
 #                          prior = set_prior("normal(0,5)", class = "b"),
-#                          family='bernoulli', iter = 6000)
+#                          family='bernoulli', iter = 4000)
 # 
 # saveRDS(m_combined_genpub, '../output/combined_img_text_genpub.RDS')
 
@@ -1016,7 +1093,7 @@ m_combined_genpub %>%
 # m_combined_TvC <- brm(any_ref~trust_effect_z + Demog + type + (type|Source),
 #                       data=mod.dat,
 #                       prior = set_prior("normal(0,5)", class = "b"),
-#                       family='bernoulli', iter = 6000)
+#                       family='bernoulli', iter = 4000)
 # 
 # saveRDS(m_combined_TvC, '../output/combined_img_text_TvC.RDS')
 
@@ -1055,10 +1132,17 @@ scored_dat %>%
 # m_combined.w <- brm(target_ref~trust_effect_z + Demog + (1|Source),
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli')
+#                  family='bernoulli', save_all_pars = T)
+# m_combined.w2 <- brm(target_ref~trust_effect_z + Demog2 + (1|Source),
+#                  data=mod.dat,
+#                  prior = set_prior("normal(0,5)", class = "b"),
+#                  family='bernoulli', save_all_pars = T)
+# bf_combined.w <- bayes_factor(m_combined.w, m_combined.w2) #4.01
 # 
 # saveRDS(m_combined.w,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/combined_text.RDS')
+# saveRDS(m_combined.w2,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/combined_text2.RDS')
 m_combined.w <- readRDS('../output/combined_text.RDS')
 
 combined_w_model_mat <- as.matrix(m_combined.w)
@@ -1109,6 +1193,12 @@ mod.dat %>%
         legend.title=element_text(size=10),
         legend.text = element_text(size=8)) -> combined_w_trust_plot
 
+combined_w_preds %>%
+  ungroup() %>%
+  mutate(measure='Legitimizing',
+         document='captions+titles') %>%
+  rbind(plotting_data) -> plotting_data
+
 legend <- get_legend(combined_w_trust_plot)
 
 cowplot::plot_grid(combined_w_demog_plot, 
@@ -1146,10 +1236,17 @@ scored_dat %>%
 # m_combined.pix <- brm(mb~trust_effect_z + Demog + (1|Source),
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli')
+#                  family='bernoulli', save_all_pars = T)
+# m_combined.pix2 <- brm(mb~trust_effect_z + Demog2 + (1|Source),
+#                  data=mod.dat,
+#                  prior = set_prior("normal(0,5)", class = "b"),
+#                  family='bernoulli', save_all_pars = T)
+#bf_combined.pix <- bayes_factor(m_combined.pix, m_combined.pix2) #.01
 # 
 # saveRDS(m_combined.pix,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/combined_pix.RDS')
+# saveRDS(m_combined.pix2,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/combined_pix2.RDS')
 m_combined.pix <- readRDS('../output/combined_pix.RDS')
 
 combined_pix_model_mat <- as.matrix(m_combined.pix)
@@ -1199,6 +1296,12 @@ mod.dat %>%
   theme(#legend.position='bottom',
         legend.title=element_text(size=10),
         legend.text = element_text(size=8)) -> combined_pix_trust_plot
+
+combined_pix_preds %>%
+  ungroup() %>%
+  mutate(measure='Legitimizing',
+         document='photos') %>%
+  rbind(plotting_data) -> plotting_data
 
 legend <- get_legend(combined_pix_trust_plot)
 
@@ -1261,10 +1364,17 @@ scored_dat %>%
 # m_active.kill <- brm(target_ref~trust_effect_z + Demog + (1|Source),
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli')
+#                  family='bernoulli', save_all_pars = T)
+# m_active.kill2 <- brm(target_ref~trust_effect_z + Demog2 + (1|Source),
+#                  data=mod.dat,
+#                  prior = set_prior("normal(0,5)", class = "b"),
+#                  family='bernoulli', save_all_pars = T)
+# bf_active.kill <- bayes_factor(m_active.kill, m_active.kill2) #17.49
 # 
 # saveRDS(m_active.kill,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/active_kill.RDS')
+# saveRDS(m_active.kill2,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/active_kill2.RDS')
 
 m_active.kill <- readRDS('../output/active_kill.RDS')
 
@@ -1319,6 +1429,12 @@ mod.dat %>%
         legend.title=element_text(size=10),
         legend.text = element_text(size=8)) -> active_kill_trust_plot
 
+active_kill_preds %>%
+  ungroup() %>%
+  mutate(measure='active_kill',
+         document='captions+titles') %>%
+  rbind(plotting_data) -> plotting_data
+
 legend <- get_legend(active_kill_trust_plot)
 
 cowplot::plot_grid(active_kill_demog_plot, 
@@ -1340,7 +1456,7 @@ mod.dat %>% filter(Demog == 'General-public') -> mod.dat.genpub
 # m_active.kill_genpub <- brm(target_ref ~ trust_effect_z + (1|Source),
 #                             data=mod.dat.genpub,
 #                             prior = set_prior("normal(0,5)", class = "b"),
-#                             family='bernoulli', iter = 6000)
+#                             family='bernoulli', iter = 4000)
 # 
 # saveRDS(m_active.kill_genpub, '../output/active_kill_genpub.RDS')
 
@@ -1354,7 +1470,7 @@ m_active.kill_genpub %>%
 # m_active.kill_TvC <- brm(target_ref ~ trust_effect_z + Demog + type + (type|Source),
 #                             data=mod.dat, #use all data
 #                             prior = set_prior("normal(0,5)", class = "b"),
-#                             family='bernoulli', iter = 6000)
+#                             family='bernoulli', iter = 4000)
 # 
 # saveRDS(m_active.kill_TvC, '../output/active_kill_TvC.RDS')
 
@@ -1427,10 +1543,17 @@ scored_dat %>%
 # m_passive.kill <- brm(target_ref~trust_effect_z + Demog + (1|Source),
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli')
+#                  family='bernoulli', save_all_pars = T)
+# m_passive.kill2 <- brm(target_ref~trust_effect_z + Demog2 + (1|Source),
+#                  data=mod.dat,
+#                  prior = set_prior("normal(0,5)", class = "b"),
+#                  family='bernoulli', save_all_pars = T)
+# bf_passive.kill <- bayes_factor(m_passive.kill, m_passive.kill2) #1.07
 # 
 # saveRDS(m_passive.kill,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/passive_kill.RDS')
+# saveRDS(m_passive.kill2,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/passive_kill2.RDS')
 m_passive.kill <- readRDS('../output/passive_kill.RDS')
 
 passive_kill_model_mat <- as.matrix(m_passive.kill)
@@ -1484,6 +1607,12 @@ mod.dat %>%
         legend.title=element_text(size=10),
         legend.text = element_text(size=8)) -> passive_kill_trust_plot
 
+passive_kill_preds %>%
+  ungroup() %>%
+  mutate(measure='passive_kill',
+         document='captions+titles') %>%
+  rbind(plotting_data) -> plotting_data
+
 legend <- get_legend(passive_kill_trust_plot)
 
 cowplot::plot_grid(passive_kill_demog_plot, 
@@ -1505,7 +1634,7 @@ mod.dat %>% filter(Demog == 'General-public') -> mod.dat.genpub
 # m_passive.kill_genpub <- brm(target_ref ~ trust_effect_z + (1|Source),
 #                              data=mod.dat.genpub,
 #                              prior = set_prior("normal(0,5)", class = "b"),
-#                              family='bernoulli', iter = 6000)
+#                              family='bernoulli', iter = 4000)
 # 
 # saveRDS(m_passive.kill_genpub, '../output/passive_kill_genpub.RDS')
 
@@ -1519,7 +1648,7 @@ m_passive.kill_genpub %>%
 # m_passive.kill_TvC <- brm(target_ref ~ trust_effect_z + Demog + type + (type|Source),
 #                             data=mod.dat, #use all data
 #                             prior = set_prior("normal(0,5)", class = "b"),
-#                             family='bernoulli', iter = 6000)
+#                             family='bernoulli', iter = 4000)
 # 
 # saveRDS(m_passive.kill_TvC, '../output/passive_kill_TvC.RDS')
 
@@ -1558,19 +1687,19 @@ We then computed the proportion of articles within each source that had referenc
 
 ### Variable Correlations & Factor Loadings
 ```{r all-assoc, fig.cap='Correlation between underlying measurements'}
-df_arts %>%
-  mutate(text = gsub('African American*', 
+all_texts %>%
+  mutate(text = gsub('law enforcement', 
+                     'law_enforcement', text, ignore.case=T)) %>%
+  mutate(text = gsub('african american',
                      'african_american', text, ignore.case=T)) %>%
   mutate(text = gsub('high school',
                      'high_school', text, ignore.case=T)) %>%
   mutate(text = gsub('michael brown',
-                     'mibhael_brown', text, ignore.case=T)) %>%
-  mutate(text = gsub('mike brown', 
+                     'michael_brown', text, ignore.case=T)) %>%
+  mutate(text = gsub('mike brown',
                      'mike_brown', text, ignore.case=T)) %>%
-  mutate(text = gsub('gun.* down', 
-                     'gun_down', text, ignore.case=T)) %>%
-  mutate(text = gsub('mow.* down', 
-                     'mow_down', text, ignore.case=T))-> df
+  mutate(text = gsub('mow.* down',
+                     'mow_down', text, ignore.case=T)) -> df # save to df
 
 df %>%
   filter(!is.na(text)) %>%
@@ -1579,6 +1708,8 @@ df %>%
 race_words <- data.frame(word = c('black', 'african_american*', 'white', 
                                   'caucasian', 'race', 'ethnicity'),
                          race_ref = rep(1, 6))
+neg_protest_words <- data.frame(word = c('riot.*', 'loot.*'),
+                                neg_protest_ref = c(1,1))
 inn_words <- data.frame(word = c('unarmed', 'weaponless', 'innocent'),
                         inn_ref = rep(1, 3))
 young_words <- data.frame(word = c('teen*', 'youth', 'young', 'adolescent',
@@ -1588,7 +1719,7 @@ mb_words <- data.frame(word = c('michael_brown', 'michael', 'mike', 'brown',
                                 'mike_brown'),
                        mb_ref = rep(1, 5))
 
-kill_words <- data.frame(word = c('kill.*', 'gun.*_down', 'mow.*_down', 
+kill_words <- data.frame(word = c('kill.*', 'gun.*_down', 'mow_down', 
                                     'murder.*', 'slaughter.*', 'butcher.*', 
                                     'execute.*', 'massacre.*'),
                            kill_ref = rep(1, 8))
@@ -1598,6 +1729,9 @@ death_words <- data.frame(word = c('dead', 'death', 'died',
 
 tidy_articles %>%
   regex_left_join(race_words) %>%
+  mutate(word = word.x) %>%
+  select(-word.y, -word.x) %>%
+  regex_left_join(neg_protest_words) %>%
   mutate(word = word.x) %>%
   select(-word.y, -word.x) %>%
   regex_left_join(inn_words) %>%
@@ -1615,40 +1749,147 @@ tidy_articles %>%
   regex_left_join(death_words) %>%
   mutate(word = word.x) %>%
   select(-word.y, -word.x) %>%
+  regex_left_join(police_words) %>%
+  mutate(word = word.x) %>%
+  select(-word.y, -word.x) %>%
+  regex_left_join(protest_words) %>%
+  mutate(word = word.x) %>%
+  select(-word.y, -word.x) %>%
   replace_na(list(race_ref = 0,
                   inn_ref = 0,
                   young_ref = 0,
                   mb_ref = 0,
                   kill_ref = 0,
-                  death_ref = 0)) %>%
+                  death_ref = 0,
+                  police_ref = 0,
+                  protest_ref = 0,
+                  neg_protest_ref = 0)) %>%
   group_by(Source, ID, type) %>%
   summarise(race_ref = max(race_ref),
             inn_ref = max(inn_ref),
             young_ref = max(young_ref),
             mb_ref = max(mb_ref),
             kill_ref = max(kill_ref),
-            death_ref = max(death_ref)) -> scored_dat
+            death_ref = max(death_ref),
+            police_ref = max(police_ref),
+            protest_ref = max(protest_ref),
+            neg_protest_ref = max(neg_protest_ref)) -> scored_dat
+
+saveRDS(scored_dat, '../output/scored_texts.RDS')
+
+scored_dat %>%
+  left_join(df_audience) %>%
+  left_join(df_sources) -> mod.dat
+
+# m_race <- brm(race_ref~trust_effect_z + Demog + (1|Source),
+#               data=mod.dat,
+#               prior = set_prior("normal(0,5)", class = "b"),
+#               family='bernoulli', save_all_pars = T)
+# saveRDS(m_race,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/race.RDS')
+m_race <- readRDS('../output/race.RDS')
+
+mod.dat %>% 
+  ungroup() %>%
+  modelr::data_grid(trust_effect_z=c(0,1), Demog) %>%
+  add_fitted_draws(m_race, allow_new_levels=T, 
+                   re_formula = NA, transform=T) %>%
+  median_hdi() -> race_preds
+
+race_preds %>%
+  ungroup() %>%
+  mutate(measure='race',
+         document='captions+titles') %>%
+  rbind(plotting_data) -> plotting_data
+
+# m_inn <- brm(inn_ref~trust_effect_z + Demog + (1|Source),
+#               data=mod.dat,
+#               prior = set_prior("normal(0,5)", class = "b"),
+#               family='bernoulli', save_all_pars = T)
+# saveRDS(m_inn,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/innocence.RDS')
+m_inn <- readRDS('../output/innocence.RDS')
+
+mod.dat %>% 
+  ungroup() %>%
+  modelr::data_grid(trust_effect_z=c(0,1), Demog) %>%
+  add_fitted_draws(m_inn, allow_new_levels=T, 
+                   re_formula = NA, transform=T) %>%
+  median_hdi() -> inn_preds
+
+inn_preds %>%
+  ungroup() %>%
+  mutate(measure='innocence',
+         document='captions+titles') %>%
+  rbind(plotting_data) -> plotting_data
+
+# m_young <- brm(young_ref~trust_effect_z + Demog + (1|Source),
+#               data=mod.dat,
+#               prior = set_prior("normal(0,5)", class = "b"),
+#               family='bernoulli', save_all_pars = T)
+# saveRDS(m_young,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/young.RDS')
+m_young <- readRDS('../output/young.RDS')
+
+mod.dat %>% 
+  ungroup() %>%
+  modelr::data_grid(trust_effect_z=c(0,1), Demog) %>%
+  add_fitted_draws(m_young, allow_new_levels=T, 
+                   re_formula = NA, transform=T) %>%
+  median_hdi() -> young_preds
+
+young_preds %>%
+  ungroup() %>%
+  mutate(measure='young',
+         document='captions+titles') %>%
+  rbind(plotting_data) -> plotting_data
+
+# m_mb <- brm(mb_ref~trust_effect_z + Demog + (1|Source),
+#               data=mod.dat,
+#               prior = set_prior("normal(0,5)", class = "b"),
+#               family='bernoulli', save_all_pars = T)
+# saveRDS(m_mb,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/mb.RDS')
+m_mb <- readRDS('../output/mb.RDS')
+
+mod.dat %>% 
+  ungroup() %>%
+  modelr::data_grid(trust_effect_z=c(0,1), Demog) %>%
+  add_fitted_draws(m_mb, allow_new_levels=T, 
+                   re_formula = NA, transform=T) %>%
+  median_hdi() -> mb_preds
+
+mb_preds %>%
+  ungroup() %>%
+  mutate(measure='mb',
+         document='captions+titles') %>%
+  rbind(plotting_data) -> plotting_data
 
 featured_imgs %>%
   left_join(df_image_tags %>% select(PictureID, Protest, Police, MB)) %>%
-  mutate(ID = ArticleID) %>%
+  mutate(ID = PictureID) %>% 
   select(ID, Protest, Police, MB) %>%
-  left_join(scored_dat) -> mod.dat
+  right_join(scored_dat) -> mod.dat
 
 mod.dat %>%
   group_by(Source) %>%
-  summarise(prot_img_prop = mean(Protest),
-            pol_img_prop = mean(Police),
-            mb_img_prop = mean(MB),
+  summarise(prot_img_prop = mean(Protest, na.rm=T),
+            pol_img_prop = mean(Police, na.rm=T),
+            mb_img_prop = mean(MB, na.rm=T),
             race_ref_prop = mean(race_ref),
             inn_ref_prop = mean(inn_ref),
             young_ref_prop = mean(young_ref),
             mb_ref_prop = mean(mb_ref),
             active_kill_ref_prop = mean(kill_ref),
-            passive_kill_ref_prop = mean(death_ref)) -> cor_dat
+            passive_kill_ref_prop = mean(death_ref),
+            pol_ref_prop = mean(police_ref),
+            prot_ref_prop = mean(protest_ref),
+            neg_protest_ref_prop = mean(neg_protest_ref)) -> cor_dat
 
+write.csv(cor_dat, file = '/Users/travis/Desktop/source_level.csv', row.names = F)
+write.csv(mod.dat, file = '/Users/travis/Desktop/document_level.csv', row.names=F)
 
-M <- cor(cor_dat[,2:10], use='complete.obs')
+M <- cor(cor_dat[,2:13], use='complete.obs')
 
 
 pl <- corrplot(M, order='hclust', type='upper', method='number',
@@ -1660,17 +1901,17 @@ Figure \@ref(fig:all-assoc) displays the correlations of these proportions. Comp
 
 ```{r factor-analysis}
 eigs <- eigen(M)
-fit <- psych::fa(cor_dat[,2:10], nfactors = 3, fm='gls', rotate='varimax')
+fit <- psych::fa(cor_dat[,2:13], nfactors = 3, fm='gls', rotate='varimax')
 
 print(fit$loadings, cut=.3)
 
 ```
 
-The first factor is clearly about Michael Brown and his death: References to Brown's name and images of Brown load highly onto this first factor, with references to active killing, passive killing, and his innocence also loading highly onto this factor. Especially given that references to Brown's innocence load onto this factor, this factor may represent a dimension on which Michael Brown is portrayed favorably.
+The first factor appears to be a mixture of references to Michael Brown's death and protest, with references to Michael Brown's name and his innocence, along with references of passive killing, protest, and negative protest references loading highly onto this factor. 
 
-Passive kill words, images of police, and images of protest load positively onto the second factor, whereas references to race load negatively. This may indicate a diminished emphasis on Michael Brown and race in this factor.
+Images of and textual references to protest and police, along with mentions of youth and negative protest load strongly onto the second factor. References to Michael Brown's name and images of Michael brown load negatively onto this factor. This factor is thus mostly oriented around the protests, and with not much attention paid to Michael Brown or his death.
 
-The third factor does not include references to Michael Brown or his death per se, but is more oriented toward contextualizing details, namely references to race and age. 
+The third factor includes high loadings for race, innocence, youth, active kill, and police.
 
 ### Models of audience & political orientation associations
 ```{r dim-analysis, fig.cap='Modeled level of factor components'}
@@ -1683,7 +1924,6 @@ cor_dat %>%
 # m_fact1 <- brm(GLS1~trust_effect_z + Demog,
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"))
-# 
 # saveRDS(m_fact1,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/fact1.RDS')
 m_fact1 <- readRDS('../output/fact1.RDS')
@@ -1691,7 +1931,6 @@ m_fact1 <- readRDS('../output/fact1.RDS')
 # m_fact2 <- brm(GLS2~trust_effect_z + Demog,
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"))
-# 
 # saveRDS(m_fact2,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/fact2.RDS')
 m_fact2 <- readRDS('../output/fact2.RDS')
@@ -1699,16 +1938,23 @@ m_fact2 <- readRDS('../output/fact2.RDS')
 # m_fact3 <- brm(GLS3~trust_effect_z + Demog,
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"))
-# 
 # saveRDS(m_fact3,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/fact3.RDS')
 m_fact3 <- readRDS('../output/fact3.RDS')
+
+# m_fact4 <- brm(GLS4~trust_effect_z + Demog,
+#                  data=mod.dat,
+#                  prior = set_prior("normal(0,5)", class = "b"))
+# saveRDS(m_fact4,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/fact4.RDS')
+# m_fact4 <- readRDS('../output/fact4.RDS')
 
 m_fact1 %>%
   spread_draws(b_trust_effect_z) %>%
   median_hdi() -> fact1_trust_slope
 
 mod.dat %>% 
+  ungroup() %>%
   modelr::data_grid(trust_effect_z=c(0,1), Demog) %>%
   add_fitted_draws(m_fact1, allow_new_levels=T, 
                    re_formula = NA, transform=T) %>%
@@ -1836,11 +2082,83 @@ mod.dat %>%
         legend.title=element_text(size=10),
         legend.text = element_text(size=8)) -> fact3_trust_plot
 
+# m_fact4 %>%
+#   spread_draws(b_trust_effect_z) %>%
+#   median_hdi() -> fact4_trust_slope
+
+# mod.dat %>% 
+#   modelr::data_grid(trust_effect_z=c(0,1), Demog) %>%
+#   add_fitted_draws(m_fact4, allow_new_levels=T, 
+#                    re_formula = NA, transform=T) %>%
+#   median_hdi() -> fact4_preds
+
+# mod.dat %>% 
+#   modelr::data_grid(trust_effect_z=0, Demog) %>%
+#   add_fitted_draws(m_fact4, allow_new_levels=T, 
+#                    re_formula = NA, transform=T) %>%
+#   ggplot(aes(y=Demog, x=.value)) + 
+#   geom_halfeyeh() +
+#   ylab('') +
+#   xlab('Factor Loading') +
+#   #xlim(0, 1) +
+#   geom_point(data=mod.dat, aes(x=GLS4, y=Demog), 
+#              position=position_jitter(height = .05), size=.5) +
+#   theme(axis.text.x = element_text(size=8, angle = 20))  -> fact4_demog_plot
+
+trust_min <- min(mod.dat$trust_effect_z, na.rm=T)
+trust_max <- max(mod.dat$trust_effect_z, na.rm=T)
+
+# mod.dat %>% 
+#   modelr::data_grid(trust_effect_z=seq(trust_min, trust_max, .1), Demog='General-public') %>%
+#   add_fitted_draws(m_fact4, allow_new_levels=T, 
+#                    re_formula = NA, transform=T) %>%
+#   ggplot(aes(x=trust_effect_z, y=.value)) + 
+#   stat_lineribbon() +
+#   xlab('Political Leaning') +
+#   ylab('Factor Loading') +
+#   scale_fill_brewer(palette='Greys', name='Highest\nDensity\nInterval',
+#                     guide=guide_legend(title.position='top')) +
+#   scale_size_continuous(name='Number\nof Items',
+#                         guide=guide_legend(title.position='top')) + 
+#   geom_point(data=mod.dat, 
+#            aes(x=trust_effect_z, y=GLS4)) + 
+#   theme(#legend.position='bottom',
+#         legend.title=element_text(size=10),
+#         legend.text = element_text(size=8)) -> fact4_trust_plot
+
 legend <- get_legend(fact1_trust_plot)
 
 fact1_mat <- as.matrix(m_fact1)
 fact2_mat <- as.matrix(m_fact2)
 fact3_mat <- as.matrix(m_fact3)
+# fact4_mat <- as.matrix(m_fact4)
+
+fact1_preds %>%
+  ungroup() %>%
+  mutate(measure='factor1',
+         document='factor_analysis') %>%
+  rbind(plotting_data) -> plotting_data
+
+fact2_preds %>%
+  ungroup() %>%
+  mutate(measure='factor2',
+         document='factor_analysis') %>%
+  rbind(plotting_data) -> plotting_data
+
+fact3_preds %>%
+  ungroup() %>%
+  mutate(measure='factor3',
+         document='factor_analysis') %>%
+  rbind(plotting_data) -> plotting_data
+
+# fact4_preds %>%
+#   ungroup() %>%
+#   mutate(measure='factor4',
+#          document='factor_analysis') %>%
+#   rbind(plotting_data) -> plotting_data
+
+write.csv(plotting_data, 
+          '../output/plotting_data_demogs.csv', row.names = FALSE)
 
 cowplot::plot_grid(cowplot::plot_grid(fact1_demog_plot + 
                                         theme(axis.title.x = element_blank()), 
@@ -1864,9 +2182,11 @@ cowplot::plot_grid(cowplot::plot_grid(fact1_demog_plot +
                    legend, ncol=3, rel_widths =c(.9, 1, .2) )
 ```
 
-Figure \@ref(fig:dim-analysis) displays the models fit to these data. There are systematic differences by source audience along the first two factors. African American oriented sources are more likely to emphasize the first factor than general public oriented sources (General Public = `r round(fact1_preds$.value[2], 2)`, [`r round(fact1_preds$.lower[2], 2)`, `r round(fact1_preds$.upper[2], 2)`]; African American = `r round(fact1_preds$.value[1], 2)`, [`r round(fact1_preds$.lower[1], 2)`, `r round(fact1_preds$.upper[1], 2)`],  $prob_{gp>aa}$ < .01). In contrast, the general public news sources are more likely to emphasize the second factor than African American oriented sources (General Public = `r round(fact2_preds$.value[2], 2)`, [`r round(fact2_preds$.lower[2], 2)`, `r round(fact2_preds$.upper[2], 2)`]; African American = `r round(fact2_preds$.value[1], 2)`, [`r round(fact2_preds$.lower[1], 2)`, `r round(fact2_preds$.upper[1], 2)`],  $prob_{gp>aa}$ > .99). The data do not suggest as strong of a difference by source audience for the third factor, though it is slightly more likely to be emphasized by the general public (General Public = `r round(fact3_preds$.value[2], 2)`, [`r round(fact3_preds$.lower[2], 2)`, `r round(fact3_preds$.upper[2], 2)`]; African American = `r round(fact3_preds$.value[1], 2)`, [`r round(fact3_preds$.lower[1], 2)`, `r round(fact3_preds$.upper[1], 2)`],  $prob_{gp>aa}$ = `r round(sum(fact3_mat[,3]>0)/4000, 2)`).
+Figure \@ref(fig:dim-analysis) displays the models fit to these data. There are no systematic differences by source audience along the first or third factors. African American oriented sources are roughly equally likely to emphasize the first factor as are general public oriented sources (General Public = `r round(fact1_preds$.value[2], 2)`, [`r round(fact1_preds$.lower[2], 2)`, `r round(fact1_preds$.upper[2], 2)`]; African American = `r round(fact1_preds$.value[1], 2)`, [`r round(fact1_preds$.lower[1], 2)`, `r round(fact1_preds$.upper[1], 2)`],  $prob_{gp>aa}$ < `r round(sum(fact1_mat[,3]>0)/4000, 2)`). Similarly, emphasis on the third factor is roughly equal between these two groups (General Public = `r round(fact3_preds$.value[2], 2)`, [`r round(fact3_preds$.lower[2], 2)`, `r round(fact3_preds$.upper[2], 2)`]; African American = `r round(fact3_preds$.value[1], 2)`, [`r round(fact3_preds$.lower[1], 2)`, `r round(fact3_preds$.upper[1], 2)`],  $prob_{gp>aa}$ = `r round(sum(fact3_mat[,3]>0)/4000, 2)`).
 
-The effect of political orientation is generally positive across all three factors, such that more conservative sources are somewhat more likely to emphasize all three factors than more liberal sources, but zero effect of political orientation is a plausible value for all three models ($factor 1$ = `r round(fact1_trust_slope[1,1], 2)`, [`r round(fact1_trust_slope[1,2], 2)`, `r round(fact1_trust_slope[1,3], 2)`]; $factor 2$ = `r round(fact2_trust_slope[1,1], 2)`, [`r round(fact2_trust_slope[1,2], 2)`, `r round(fact2_trust_slope[1,3], 2)`]; $factor 3$ = `r round(fact3_trust_slope[1,1], 2)`, [`r round(fact3_trust_slope[1,2], 2)`, `r round(fact3_trust_slope[1,3], 2)`]).
+In contrast, the general public news sources are much more likely to emphasize the second factor than African American oriented sources (General Public = `r round(fact2_preds$.value[2], 2)`, [`r round(fact2_preds$.lower[2], 2)`, `r round(fact2_preds$.upper[2], 2)`]; African American = `r round(fact2_preds$.value[1], 2)`, [`r round(fact2_preds$.lower[1], 2)`, `r round(fact2_preds$.upper[1], 2)`],  $prob_{gp>aa}$ > .99). 
+
+The effect of political orientation is generally positive across all three factors, such that more conservative sources are somewhat more likely to emphasize all three factors than more liberal sources, but only for the second factor can we completely rule out zero effect of political orientation  ($factor 1$ = `r round(fact1_trust_slope[1,1], 2)`, [`r round(fact1_trust_slope[1,2], 2)`, `r round(fact1_trust_slope[1,3], 2)`]; $factor 2$ = `r round(fact2_trust_slope[1,1], 2)`, [`r round(fact2_trust_slope[1,2], 2)`, `r round(fact2_trust_slope[1,3], 2)`]; $factor 3$ = `r round(fact3_trust_slope[1,1], 2)`, [`r round(fact3_trust_slope[1,2], 2)`, `r round(fact3_trust_slope[1,3], 2)`]).
 
 ## Counting references (vs. presence/absence)
 We repeated many of the analyses described above, but instead of scoring each article in a binary fashion (presence or absence of any of the words), we summed the number of times a text had references to one of the target words. For these analyses, any target that was a bigram (e.g. 'Michael Brown') was counted as one hit, rather than two. Additionally, although we occasionally search for unigrams that are subsets of larger bigrams (as in searching for both 'Brown' and 'Michael Brown'), hits in these cases are mutually exclusive (e.g. if the phrase 'Michael Brown' appears in the article, it would only match on 'Michael Brown' and would not match on 'Brown', thus yielding 1 hit from the target list).
@@ -2587,15 +2907,3 @@ pl
 p5
 ```
 
-## Impact of African-American oriented sources on political orientation
-
-Running a model in the format `r binary_variable ~ trust_effect_z + (1 | Source)` and comparing the output to the original model with all the sources.
-
-### Reference to police or protest
-
-
-
-
-### Impact of text type (caption vs. title) on analyses
-
-`r binary_variable ~ trust_effect_z + Demog + type + (type | Source)`
