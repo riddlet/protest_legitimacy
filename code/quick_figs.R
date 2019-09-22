@@ -70,7 +70,7 @@ plot_dat %>%
                           `Michael Brown\ncaptions+titles` = 'mb\ncaptions+titles',
                           `Race\ncaptions+titles` = 'race\ncaptions+titles',
                           `Youth\ncaptions+titles` = 'young\ncaptions+titles',
-                          `Michael Brown\nphotos` = 'Legitimizing\nphotos',)) %>%
+                          `Michael Brown\nphotos` = 'Legitimizing\nphotos')) %>%
   filter(var %ni% c('Police\ncaptions+titles',
                     'Police\nphotos',
                     'Protest\ncaptions+titles',

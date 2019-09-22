@@ -1868,23 +1868,24 @@ mb_preds %>%
 featured_imgs %>%
   left_join(df_image_tags %>% select(PictureID, Protest, Police, MB)) %>%
   mutate(ID = PictureID) %>% 
-  select(ID, Protest, Police, MB) %>%
-  right_join(scored_dat) -> mod.dat
+  select(Source, ID, Protest, Police, MB) %>%
+  mutate(type='Pic, No Caption') %>%
+  full_join(scored_dat) -> mod.dat
 
 mod.dat %>%
   group_by(Source) %>%
   summarise(prot_img_prop = mean(Protest, na.rm=T),
             pol_img_prop = mean(Police, na.rm=T),
             mb_img_prop = mean(MB, na.rm=T),
-            race_ref_prop = mean(race_ref),
-            inn_ref_prop = mean(inn_ref),
-            young_ref_prop = mean(young_ref),
-            mb_ref_prop = mean(mb_ref),
-            active_kill_ref_prop = mean(kill_ref),
-            passive_kill_ref_prop = mean(death_ref),
-            pol_ref_prop = mean(police_ref),
-            prot_ref_prop = mean(protest_ref),
-            neg_protest_ref_prop = mean(neg_protest_ref)) -> cor_dat
+            race_ref_prop = mean(race_ref, na.rm=T),
+            inn_ref_prop = mean(inn_ref, na.rm=T),
+            young_ref_prop = mean(young_ref, na.rm=T),
+            mb_ref_prop = mean(mb_ref, na.rm=T),
+            active_kill_ref_prop = mean(kill_ref, na.rm=T),
+            passive_kill_ref_prop = mean(death_ref, na.rm=T),
+            pol_ref_prop = mean(police_ref, na.rm=T),
+            prot_ref_prop = mean(protest_ref, na.rm=T),
+            neg_protest_ref_prop = mean(neg_protest_ref, na.rm=T)) -> cor_dat
 
 write.csv(cor_dat, file = '../output/source_level_cors.csv', row.names = F)
 write.csv(mod.dat, file = '../output/document_level_cors.csv', row.names=F)
@@ -1901,17 +1902,17 @@ Figure \@ref(fig:all-assoc) displays the correlations of these proportions. Comp
 
 ```{r factor-analysis}
 eigs <- eigen(M)
-fit <- psych::fa(cor_dat[,2:13], nfactors = 3, fm='gls', rotate='varimax')
+fit <- psych::fa(cor_dat[,2:13], nfactors = 3, fm = 'gls', rotate='varimax')
 
 print(fit$loadings, cut=.3)
 
 ```
 
-The first factor appears to be a mixture of references to Michael Brown's death and protest, with references to Michael Brown's name and his innocence, along with references of passive killing, protest, and negative protest references loading highly onto this factor. 
+The first factor appears to largely emphasize protest and police, with additional references to death, innocence, and youth.
 
-Images of and textual references to protest and police, along with mentions of youth and negative protest load strongly onto the second factor. References to Michael Brown's name and images of Michael brown load negatively onto this factor. This factor is thus mostly oriented around the protests, and with not much attention paid to Michael Brown or his death.
+The second (GLS2) factor has negative loadings for police images, but high loadings for many of the components we associated with legitimizing content, including images of Michael Brown, references to race, innocence, Michael Brown's name, and active killing. Images of and textual references to protest and police, along with mentions of youth and negative protest load strongly onto the second factor. References to Michael Brown's name and images of Michael brown load negatively onto this factor. This factor is thus mostly oriented around the protests, and with not much attention paid to Michael Brown or his death.
 
-The third factor includes high loadings for race, innocence, youth, active kill, and police.
+The third factor includes high loadings for police and protest images, negative protest references, Michael Brown, passive killing, and innocence.
 
 ### Models of audience & political orientation associations
 ```{r dim-analysis, fig.cap='Modeled level of factor components'}
@@ -1921,33 +1922,26 @@ cor_dat %>%
   left_join(df_audience) %>%
   left_join(df_sources) -> mod.dat
 
-# m_fact1 <- brm(GLS1~trust_effect_z + Demog,
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"))
-# saveRDS(m_fact1,
-#         '/Users/travis/Documents/gits/protest_legitimacy/output/fact1.RDS')
+m_fact1 <- brm(GLS1~trust_effect_z + Demog,
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"))
+saveRDS(m_fact1,
+        '/Users/travis/Documents/gits/protest_legitimacy/output/fact1.RDS')
 m_fact1 <- readRDS('../output/fact1.RDS')
 
-# m_fact2 <- brm(GLS2~trust_effect_z + Demog,
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"))
-# saveRDS(m_fact2,
-#         '/Users/travis/Documents/gits/protest_legitimacy/output/fact2.RDS')
+m_fact2 <- brm(GLS2~trust_effect_z + Demog,
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"))
+saveRDS(m_fact2,
+        '/Users/travis/Documents/gits/protest_legitimacy/output/fact2.RDS')
 m_fact2 <- readRDS('../output/fact2.RDS')
 
-# m_fact3 <- brm(GLS3~trust_effect_z + Demog,
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"))
-# saveRDS(m_fact3,
-#         '/Users/travis/Documents/gits/protest_legitimacy/output/fact3.RDS')
+m_fact3 <- brm(GLS3~trust_effect_z + Demog,
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"))
+saveRDS(m_fact3,
+        '/Users/travis/Documents/gits/protest_legitimacy/output/fact3.RDS')
 m_fact3 <- readRDS('../output/fact3.RDS')
-
-# m_fact4 <- brm(GLS4~trust_effect_z + Demog,
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"))
-# saveRDS(m_fact4,
-#         '/Users/travis/Documents/gits/protest_legitimacy/output/fact4.RDS')
-# m_fact4 <- readRDS('../output/fact4.RDS')
 
 m_fact1 %>%
   spread_draws(b_trust_effect_z) %>%
@@ -2033,7 +2027,7 @@ mod.dat %>%
   scale_size_continuous(name='Number\nof Items',
                         guide=guide_legend(title.position='top')) + 
   geom_point(data=mod.dat, 
-           aes(x=trust_effect_z, y=GLS1)) + 
+           aes(x=trust_effect_z, y=GLS2)) + 
   theme(#legend.position='bottom',
         legend.title=element_text(size=10),
         legend.text = element_text(size=8)) -> fact2_trust_plot
@@ -2082,56 +2076,12 @@ mod.dat %>%
         legend.title=element_text(size=10),
         legend.text = element_text(size=8)) -> fact3_trust_plot
 
-# m_fact4 %>%
-#   spread_draws(b_trust_effect_z) %>%
-#   median_hdi() -> fact4_trust_slope
-
-# mod.dat %>% 
-#   modelr::data_grid(trust_effect_z=c(0,1), Demog) %>%
-#   add_fitted_draws(m_fact4, allow_new_levels=T, 
-#                    re_formula = NA, transform=T) %>%
-#   median_hdi() -> fact4_preds
-
-# mod.dat %>% 
-#   modelr::data_grid(trust_effect_z=0, Demog) %>%
-#   add_fitted_draws(m_fact4, allow_new_levels=T, 
-#                    re_formula = NA, transform=T) %>%
-#   ggplot(aes(y=Demog, x=.value)) + 
-#   geom_halfeyeh() +
-#   ylab('') +
-#   xlab('Factor Loading') +
-#   #xlim(0, 1) +
-#   geom_point(data=mod.dat, aes(x=GLS4, y=Demog), 
-#              position=position_jitter(height = .05), size=.5) +
-#   theme(axis.text.x = element_text(size=8, angle = 20))  -> fact4_demog_plot
-
-trust_min <- min(mod.dat$trust_effect_z, na.rm=T)
-trust_max <- max(mod.dat$trust_effect_z, na.rm=T)
-
-# mod.dat %>% 
-#   modelr::data_grid(trust_effect_z=seq(trust_min, trust_max, .1), Demog='General-public') %>%
-#   add_fitted_draws(m_fact4, allow_new_levels=T, 
-#                    re_formula = NA, transform=T) %>%
-#   ggplot(aes(x=trust_effect_z, y=.value)) + 
-#   stat_lineribbon() +
-#   xlab('Political Leaning') +
-#   ylab('Factor Loading') +
-#   scale_fill_brewer(palette='Greys', name='Highest\nDensity\nInterval',
-#                     guide=guide_legend(title.position='top')) +
-#   scale_size_continuous(name='Number\nof Items',
-#                         guide=guide_legend(title.position='top')) + 
-#   geom_point(data=mod.dat, 
-#            aes(x=trust_effect_z, y=GLS4)) + 
-#   theme(#legend.position='bottom',
-#         legend.title=element_text(size=10),
-#         legend.text = element_text(size=8)) -> fact4_trust_plot
 
 legend <- get_legend(fact1_trust_plot)
 
 fact1_mat <- as.matrix(m_fact1)
 fact2_mat <- as.matrix(m_fact2)
 fact3_mat <- as.matrix(m_fact3)
-# fact4_mat <- as.matrix(m_fact4)
 
 fact1_preds %>%
   ungroup() %>%
@@ -2151,11 +2101,6 @@ fact3_preds %>%
          document='factor_analysis') %>%
   rbind(plotting_data) -> plotting_data
 
-# fact4_preds %>%
-#   ungroup() %>%
-#   mutate(measure='factor4',
-#          document='factor_analysis') %>%
-#   rbind(plotting_data) -> plotting_data
 
 write.csv(plotting_data, 
           '../output/plotting_data_demogs.csv', row.names = FALSE)
@@ -2182,11 +2127,13 @@ cowplot::plot_grid(cowplot::plot_grid(fact1_demog_plot +
                    legend, ncol=3, rel_widths =c(.9, 1, .2) )
 ```
 
-Figure \@ref(fig:dim-analysis) displays the models fit to these data. There are no systematic differences by source audience along the first or third factors. African American oriented sources are roughly equally likely to emphasize the first factor as are general public oriented sources (General Public = `r round(fact1_preds$.value[2], 2)`, [`r round(fact1_preds$.lower[2], 2)`, `r round(fact1_preds$.upper[2], 2)`]; African American = `r round(fact1_preds$.value[1], 2)`, [`r round(fact1_preds$.lower[1], 2)`, `r round(fact1_preds$.upper[1], 2)`],  $prob_{gp>aa}$ < `r round(sum(fact1_mat[,3]>0)/4000, 2)`). Similarly, emphasis on the third factor is roughly equal between these two groups (General Public = `r round(fact3_preds$.value[2], 2)`, [`r round(fact3_preds$.lower[2], 2)`, `r round(fact3_preds$.upper[2], 2)`]; African American = `r round(fact3_preds$.value[1], 2)`, [`r round(fact3_preds$.lower[1], 2)`, `r round(fact3_preds$.upper[1], 2)`],  $prob_{gp>aa}$ = `r round(sum(fact3_mat[,3]>0)/4000, 2)`).
+Figure \@ref(fig:dim-analysis) displays the models fit to these data. African American oriented sources are roughly less likely to emphasize the first factor than are general public oriented sources (General Public = `r round(fact1_preds$.value[2], 2)`, [`r round(fact1_preds$.lower[2], 2)`, `r round(fact1_preds$.upper[2], 2)`]; African American = `r round(fact1_preds$.value[1], 2)`, [`r round(fact1_preds$.lower[1], 2)`, `r round(fact1_preds$.upper[1], 2)`],  $prob_{gp>aa}$ > .99). 
 
-In contrast, the general public news sources are much more likely to emphasize the second factor than African American oriented sources (General Public = `r round(fact2_preds$.value[2], 2)`, [`r round(fact2_preds$.lower[2], 2)`, `r round(fact2_preds$.upper[2], 2)`]; African American = `r round(fact2_preds$.value[1], 2)`, [`r round(fact2_preds$.lower[1], 2)`, `r round(fact2_preds$.upper[1], 2)`],  $prob_{gp>aa}$ > .99). 
+In contrast, the general public news sources are much less likely to emphasize the second factor than African American oriented sources (General Public = `r round(fact2_preds$.value[2], 2)`, [`r round(fact2_preds$.lower[2], 2)`, `r round(fact2_preds$.upper[2], 2)`]; African American = `r round(fact2_preds$.value[1], 2)`, [`r round(fact2_preds$.lower[1], 2)`, `r round(fact2_preds$.upper[1], 2)`],  $prob_{gp>aa}$ < .01). 
 
-The effect of political orientation is generally positive across all three factors, such that more conservative sources are somewhat more likely to emphasize all three factors than more liberal sources, but only for the second factor can we completely rule out zero effect of political orientation  ($factor 1$ = `r round(fact1_trust_slope[1,1], 2)`, [`r round(fact1_trust_slope[1,2], 2)`, `r round(fact1_trust_slope[1,3], 2)`]; $factor 2$ = `r round(fact2_trust_slope[1,1], 2)`, [`r round(fact2_trust_slope[1,2], 2)`, `r round(fact2_trust_slope[1,3], 2)`]; $factor 3$ = `r round(fact3_trust_slope[1,1], 2)`, [`r round(fact3_trust_slope[1,2], 2)`, `r round(fact3_trust_slope[1,3], 2)`]).
+Emphasis on the third factor is roughly equal between these two groups (General Public = `r round(fact3_preds$.value[2], 2)`, [`r round(fact3_preds$.lower[2], 2)`, `r round(fact3_preds$.upper[2], 2)`]; African American = `r round(fact3_preds$.value[1], 2)`, [`r round(fact3_preds$.lower[1], 2)`, `r round(fact3_preds$.upper[1], 2)`],  $prob_{gp>aa}$ = `r round(sum(fact3_mat[,3]>0)/4000, 2)`).
+
+The effect of political orientation is generally positive across all three factors, such that more conservative sources are somewhat more likely to emphasize all three factors than more liberal sources, but we cannot completely rule out zero effect of political orientation for any factor ($factor 1$ = `r round(fact1_trust_slope[1,1], 2)`, [`r round(fact1_trust_slope[1,2], 2)`, `r round(fact1_trust_slope[1,3], 2)`]; $factor 2$ = `r round(fact2_trust_slope[1,1], 2)`, [`r round(fact2_trust_slope[1,2], 2)`, `r round(fact2_trust_slope[1,3], 2)`]; $factor 3$ = `r round(fact3_trust_slope[1,1], 2)`, [`r round(fact3_trust_slope[1,2], 2)`, `r round(fact3_trust_slope[1,3], 2)`]).
 
 ## Counting references (vs. presence/absence)
 We repeated many of the analyses described above, but instead of scoring each article in a binary fashion (presence or absence of any of the words), we summed the number of times a text had references to one of the target words. For these analyses, any target that was a bigram (e.g. 'Michael Brown') was counted as one hit, rather than two. Additionally, although we occasionally search for unigrams that are subsets of larger bigrams (as in searching for both 'Brown' and 'Michael Brown'), hits in these cases are mutually exclusive (e.g. if the phrase 'Michael Brown' appears in the article, it would only match on 'Michael Brown' and would not match on 'Brown', thus yielding 1 hit from the target list).
