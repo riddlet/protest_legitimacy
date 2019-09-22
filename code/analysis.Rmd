@@ -1902,7 +1902,7 @@ Figure \@ref(fig:all-assoc) displays the correlations of these proportions. Comp
 
 ```{r factor-analysis}
 eigs <- eigen(M)
-fit <- psych::fa(cor_dat[,2:13], nfactors = 3, fm = 'gls', rotate='varimax')
+fit <- psych::fa(cor_dat[,2:13], nfactors = 3, fm = 'minres', rotate='oblimin')
 
 print(fit$loadings, cut=.3)
 
@@ -1922,26 +1922,26 @@ cor_dat %>%
   left_join(df_audience) %>%
   left_join(df_sources) -> mod.dat
 
-m_fact1 <- brm(GLS1~trust_effect_z + Demog,
+m_fact1 <- brm(MR1~trust_effect_z + Demog,
                  data=mod.dat,
                  prior = set_prior("normal(0,5)", class = "b"))
-saveRDS(m_fact1,
-        '/Users/travis/Documents/gits/protest_legitimacy/output/fact1.RDS')
-m_fact1 <- readRDS('../output/fact1.RDS')
+# saveRDS(m_fact1,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/fact1.RDS')
+#m_fact1 <- readRDS('../output/fact1.RDS')
 
-m_fact2 <- brm(GLS2~trust_effect_z + Demog,
+m_fact2 <- brm(MR2~trust_effect_z + Demog,
                  data=mod.dat,
                  prior = set_prior("normal(0,5)", class = "b"))
-saveRDS(m_fact2,
-        '/Users/travis/Documents/gits/protest_legitimacy/output/fact2.RDS')
-m_fact2 <- readRDS('../output/fact2.RDS')
+# saveRDS(m_fact2,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/fact2.RDS')
+#m_fact2 <- readRDS('../output/fact2.RDS')
 
-m_fact3 <- brm(GLS3~trust_effect_z + Demog,
+m_fact3 <- brm(MR3~trust_effect_z + Demog,
                  data=mod.dat,
                  prior = set_prior("normal(0,5)", class = "b"))
-saveRDS(m_fact3,
-        '/Users/travis/Documents/gits/protest_legitimacy/output/fact3.RDS')
-m_fact3 <- readRDS('../output/fact3.RDS')
+# saveRDS(m_fact3,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/fact3.RDS')
+#m_fact3 <- readRDS('../output/fact3.RDS')
 
 m_fact1 %>%
   spread_draws(b_trust_effect_z) %>%
@@ -1963,7 +1963,7 @@ mod.dat %>%
   ylab('') +
   xlab('Factor Loading') +
   #xlim(0, 1) +
-  geom_point(data=mod.dat, aes(x=GLS1, y=Demog), 
+  geom_point(data=mod.dat, aes(x=MR1, y=Demog), 
              position=position_jitter(height = .05), size=.5) +
   theme(axis.text.x = element_text(size=8, angle = 20))  -> fact1_demog_plot
 
@@ -1983,7 +1983,7 @@ mod.dat %>%
   scale_size_continuous(name='Number\nof Items',
                         guide=guide_legend(title.position='top')) + 
   geom_point(data=mod.dat, 
-           aes(x=trust_effect_z, y=GLS1)) + 
+           aes(x=trust_effect_z, y=MR1)) + 
   theme(#legend.position='bottom',
         legend.title=element_text(size=10),
         legend.text = element_text(size=8)) -> fact1_trust_plot
@@ -2007,7 +2007,7 @@ mod.dat %>%
   ylab('') +
   xlab('Factor Loading') +
   #xlim(0, 1) +
-  geom_point(data=mod.dat, aes(x=GLS2, y=Demog), 
+  geom_point(data=mod.dat, aes(x=MR2, y=Demog), 
              position=position_jitter(height = .05), size=.5) +
   theme(axis.text.x = element_text(size=8, angle = 20))  -> fact2_demog_plot
 
@@ -2027,7 +2027,7 @@ mod.dat %>%
   scale_size_continuous(name='Number\nof Items',
                         guide=guide_legend(title.position='top')) + 
   geom_point(data=mod.dat, 
-           aes(x=trust_effect_z, y=GLS2)) + 
+           aes(x=trust_effect_z, y=MR2)) + 
   theme(#legend.position='bottom',
         legend.title=element_text(size=10),
         legend.text = element_text(size=8)) -> fact2_trust_plot
@@ -2051,12 +2051,9 @@ mod.dat %>%
   ylab('') +
   xlab('Factor Loading') +
   #xlim(0, 1) +
-  geom_point(data=mod.dat, aes(x=GLS3, y=Demog), 
+  geom_point(data=mod.dat, aes(x=MR3, y=Demog), 
              position=position_jitter(height = .05), size=.5) +
   theme(axis.text.x = element_text(size=8, angle = 20))  -> fact3_demog_plot
-
-trust_min <- min(mod.dat$trust_effect_z, na.rm=T)
-trust_max <- max(mod.dat$trust_effect_z, na.rm=T)
 
 mod.dat %>% 
   modelr::data_grid(trust_effect_z=seq(trust_min, trust_max, .1), Demog='General-public') %>%
@@ -2071,7 +2068,7 @@ mod.dat %>%
   scale_size_continuous(name='Number\nof Items',
                         guide=guide_legend(title.position='top')) + 
   geom_point(data=mod.dat, 
-           aes(x=trust_effect_z, y=GLS3)) + 
+           aes(x=trust_effect_z, y=MR3)) + 
   theme(#legend.position='bottom',
         legend.title=element_text(size=10),
         legend.text = element_text(size=8)) -> fact3_trust_plot
