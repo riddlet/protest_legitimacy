@@ -188,7 +188,6 @@ scored_dat %>%
 # m_pol2 <- brm(police_ref~trust_effect_z + Demog2 + (1|Source), data=mod.dat,
 #               prior = set_prior("normal(0,5)", class = "b"),
 #               family='bernoulli', save_all_pars=T)
-# bf_pol <- bayes_factor(m_pol, m_pol2) #23.16
 # 
 # m_prot <- brm(protest_ref~trust_effect_z + Demog + (1|Source), data=mod.dat,
 #              prior = set_prior("normal(0,5)", class = "b"),
@@ -196,13 +195,16 @@ scored_dat %>%
 # m_prot2 <- brm(protest_ref~trust_effect_z + Demog2 + (1|Source), data=mod.dat,
 #              prior = set_prior("normal(0,5)", class = "b"),
 #              family='bernoulli', save_all_pars=T)
-# bf_prot <- bayes_factor(m_prot, m_prot2) #1.46
 # saveRDS(m_pol, '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_pol.RDS')
 # saveRDS(m_prot, '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_prot.RDS')
 # saveRDS(m_pol2, '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_pol2.RDS')
 # saveRDS(m_prot2, '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_prot2.RDS')
 m_pol <- readRDS('../output/tempmod_pol.RDS')
+m_pol2 <- readRDS('../output/tempmod_pol2.RDS')
 m_prot <- readRDS('../output/tempmod_prot.RDS')
+m_prot2 <- readRDS('../output/tempmod_prot2.RDS')
+bf_prot <- bayes_factor(m_prot, m_prot2) #1.46
+bf_pol <- bayes_factor(m_pol, m_pol2) #23.16
 
 police_model_mat <- as.matrix(m_pol)
 
@@ -549,7 +551,6 @@ scored_dat %>%
 # m_prot_neg2 <- brm(neg_protest_ref~trust_effect_z + Demog2 + (1|Source),
 #                   data=mod.dat, prior = set_prior("normal(0,5)", class = "b"),
 #                   family='bernoulli', save_all_pars = T)
-# bf_prot_neg <- bayes_factor(m_prot_neg, m_prot_neg2) #4.41
 # 
 # saveRDS(m_prot_neg,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_prot_neg.RDS')
@@ -557,6 +558,8 @@ scored_dat %>%
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_prot_neg2.RDS')
 
 m_prot_neg <- readRDS('../output/tempmod_prot_neg.RDS')
+m_prot_neg2 <- readRDS('../output/tempmod_prot_neg2.RDS')
+bf_prot_neg <- bayes_factor(m_prot_neg, m_prot_neg2) #4.41
 
 neg_protest_model_mat <- as.matrix(m_prot_neg)
 
@@ -705,13 +708,14 @@ featured_imgs %>%
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
 #                  family='bernoulli', save_all_pars = T)
-# bf_pol_img <- bayes_factor(m_pol_img, m_pol_img2) #30.46
 # 
 # saveRDS(m_pol_img,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_pol_img.RDS')
 # saveRDS(m_pol_img2,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_pol_img2.RDS')
 m_pol_img <- readRDS('../output/tempmod_pol_img.RDS')
+m_pol_img2 <- readRDS('../output/tempmod_pol_img2.RDS')
+bf_pol_img <- bayes_factor(m_pol_img, m_pol_img2) #30.46
 
 # m_prot_img <- brm(Protest~trust_effect_z + Demog + (1|Source),
 #                  data=mod.dat,
@@ -721,14 +725,14 @@ m_pol_img <- readRDS('../output/tempmod_pol_img.RDS')
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
 #                  family='bernoulli', save_all_pars = T)
-# bf_prot_img <- bayes_factor(m_prot_img, m_prot_img2) #23.83
-# 
 # saveRDS(m_prot_img,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_prot_img.RDS')
 # saveRDS(m_prot_img2,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/tempmod_prot_img2.RDS')
 
 m_prot_img <- readRDS('../output/tempmod_prot_img.RDS')
+m_prot_img2 <- readRDS('../output/tempmod_prot_img2.RDS')
+bf_prot_img <- bayes_factor(m_prot_img, m_prot_img2) #23.83
 
 police_model_mat <- as.matrix(m_pol_img)
 
@@ -995,13 +999,13 @@ scored_dat %>%
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
 #                  family='bernoulli', save_all_pars = T)
-# bf_combined <- bayes_factor(m_combined, m_combined2)
-
 # saveRDS(m_combined,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/combined_img_text.RDS')
 # saveRDS(m_combined2,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/combined_img_text2.RDS')
 m_combined <- readRDS('../output/combined_img_text.RDS')
+m_combined2 <- readRDS('../output/combined_img_text2.RDS')
+bf_combined <- bayes_factor(m_combined, m_combined2)
 
 combined_model_mat <- as.matrix(m_combined)
 
@@ -1137,13 +1141,14 @@ scored_dat %>%
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
 #                  family='bernoulli', save_all_pars = T)
-# bf_combined.w <- bayes_factor(m_combined.w, m_combined.w2) #4.01
 # 
 # saveRDS(m_combined.w,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/combined_text.RDS')
 # saveRDS(m_combined.w2,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/combined_text2.RDS')
 m_combined.w <- readRDS('../output/combined_text.RDS')
+m_combined.w2 <- readRDS('../output/combined_text2.RDS')
+bf_combined.w <- bayes_factor(m_combined.w, m_combined.w2) #4.01
 
 combined_w_model_mat <- as.matrix(m_combined.w)
 
@@ -1241,13 +1246,14 @@ scored_dat %>%
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
 #                  family='bernoulli', save_all_pars = T)
-#bf_combined.pix <- bayes_factor(m_combined.pix, m_combined.pix2) #.01
 # 
 # saveRDS(m_combined.pix,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/combined_pix.RDS')
 # saveRDS(m_combined.pix2,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/combined_pix2.RDS')
 m_combined.pix <- readRDS('../output/combined_pix.RDS')
+m_combined.pix2 <- readRDS('../output/combined_pix2.RDS')
+bf_combined.pix <- bayes_factor(m_combined.pix, m_combined.pix2) #.01
 
 combined_pix_model_mat <- as.matrix(m_combined.pix)
 
@@ -1369,14 +1375,14 @@ scored_dat %>%
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
 #                  family='bernoulli', save_all_pars = T)
-# bf_active.kill <- bayes_factor(m_active.kill, m_active.kill2) #17.49
 # 
 # saveRDS(m_active.kill,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/active_kill.RDS')
 # saveRDS(m_active.kill2,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/active_kill2.RDS')
-
 m_active.kill <- readRDS('../output/active_kill.RDS')
+m_active.kill2 <- readRDS('../output/active_kill2.RDS')
+bf_active.kill <- bayes_factor(m_active.kill, m_active.kill2) #17.49
 
 active_kill_model_mat <- as.matrix(m_active.kill)
 
@@ -1548,13 +1554,14 @@ scored_dat %>%
 #                  data=mod.dat,
 #                  prior = set_prior("normal(0,5)", class = "b"),
 #                  family='bernoulli', save_all_pars = T)
-# bf_passive.kill <- bayes_factor(m_passive.kill, m_passive.kill2) #1.07
 # 
 # saveRDS(m_passive.kill,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/passive_kill.RDS')
 # saveRDS(m_passive.kill2,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/passive_kill2.RDS')
 m_passive.kill <- readRDS('../output/passive_kill.RDS')
+m_passive.kill2 <- readRDS('../output/passive_kill2.RDS')
+bf_passive.kill <- bayes_factor(m_passive.kill, m_passive.kill2) #1.07
 
 passive_kill_model_mat <- as.matrix(m_passive.kill)
 
@@ -1775,7 +1782,8 @@ tidy_articles %>%
             protest_ref = max(protest_ref),
             neg_protest_ref = max(neg_protest_ref)) -> scored_dat
 
-saveRDS(scored_dat, '../output/scored_texts.RDS')
+#saveRDS(scored_dat, '../output/scored_texts.RDS')
+scored_dat <- readRDS('../output/scored_texts.RDS')
 
 scored_dat %>%
   left_join(df_audience) %>%
@@ -1785,9 +1793,18 @@ scored_dat %>%
 #               data=mod.dat,
 #               prior = set_prior("normal(0,5)", class = "b"),
 #               family='bernoulli', save_all_pars = T)
+# m_race2 <- brm(race_ref~trust_effect_z + Demog2 + (1|Source),
+#               data=mod.dat,
+#               prior = set_prior("normal(0,5)", class = "b"),
+#               family='bernoulli', save_all_pars = T)
 # saveRDS(m_race,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/race.RDS')
+# saveRDS(m_race2,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/race2.RDS')
 m_race <- readRDS('../output/race.RDS')
+m_race2 <- readRDS('../output/race2.RDS')
+bf_race <- bayes_factor(m_race, m_race2)
+
 
 mod.dat %>% 
   ungroup() %>%
@@ -1806,9 +1823,17 @@ race_preds %>%
 #               data=mod.dat,
 #               prior = set_prior("normal(0,5)", class = "b"),
 #               family='bernoulli', save_all_pars = T)
+# m_inn2 <- brm(inn_ref~trust_effect_z + Demog2 + (1|Source),
+#               data=mod.dat,
+#               prior = set_prior("normal(0,5)", class = "b"),
+#               family='bernoulli', save_all_pars = T)
 # saveRDS(m_inn,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/innocence.RDS')
+# saveRDS(m_inn2,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/innocence2.RDS')
 m_inn <- readRDS('../output/innocence.RDS')
+m_inn2 <- readRDS('../output/innocence2.RDS')
+bf_inn <- bayes_factor(m_inn, m_inn2)
 
 mod.dat %>% 
   ungroup() %>%
@@ -1827,9 +1852,17 @@ inn_preds %>%
 #               data=mod.dat,
 #               prior = set_prior("normal(0,5)", class = "b"),
 #               family='bernoulli', save_all_pars = T)
+# m_young2 <- brm(young_ref~trust_effect_z + Demog2 + (1|Source),
+#               data=mod.dat,
+#               prior = set_prior("normal(0,5)", class = "b"),
+#               family='bernoulli', save_all_pars = T)
 # saveRDS(m_young,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/young.RDS')
+# saveRDS(m_young2,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/young2.RDS')
 m_young <- readRDS('../output/young.RDS')
+m_young2 <- readRDS('../output/young2.RDS')
+bf_young <- bayes_factor(m_young, m_young2)
 
 mod.dat %>% 
   ungroup() %>%
@@ -1848,9 +1881,18 @@ young_preds %>%
 #               data=mod.dat,
 #               prior = set_prior("normal(0,5)", class = "b"),
 #               family='bernoulli', save_all_pars = T)
+# m_mb2 <- brm(mb_ref~trust_effect_z + Demog2 + (1|Source),
+#               data=mod.dat,
+#               prior = set_prior("normal(0,5)", class = "b"),
+#               family='bernoulli', save_all_pars = T)
+# 
 # saveRDS(m_mb,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/mb.RDS')
+# saveRDS(m_mb2,
+#         '/Users/travis/Documents/gits/protest_legitimacy/output/mb2.RDS')
 m_mb <- readRDS('../output/mb.RDS')
+m_mb2 <- readRDS('../output/mb2.RDS')
+bf_mb <- bayes_factor(m_mb, m_mb2)
 
 mod.dat %>% 
   ungroup() %>%
@@ -1908,9 +1950,10 @@ print(fit$loadings, cut=.3)
 
 ```
 
-The first factor appears to largely emphasize protest and police, with additional references to death, innocence, and youth.
+Factor 1 appears to represent online news sources that frame Ferguson as a disruptive protest at a police murder of an unarmed, Black, youth (who is not named).  
 
-The second (GLS2) factor has negative loadings for police images, but high loadings for many of the components we associated with legitimizing content, including images of Michael Brown, references to race, innocence, Michael Brown's name, and active killing. Images of and textual references to protest and police, along with mentions of youth and negative protest load strongly onto the second factor. References to Michael Brown's name and images of Michael brown load negatively onto this factor. This factor is thus mostly oriented around the protests, and with not much attention paid to Michael Brown or his death.
+
+Factor 2 appears to represent online news sources that (very visually) frame Ferguson as a conflict between police and protestors over a death.  These sources appear to deracialize the killing as they are very unlikely to show Michael Brown or mention race. That these sources are also less likely to use injunctive death verbs further suggests that this framing does not emphasize of Michael Brown’s killing as unjust, thus potentially casting the Ferguson protests as illegitimate.
 
 The third factor includes high loadings for police and protest images, negative protest references, Michael Brown, passive killing, and innocence.
 
@@ -1922,26 +1965,26 @@ cor_dat %>%
   left_join(df_audience) %>%
   left_join(df_sources) -> mod.dat
 
-m_fact1 <- brm(MR1~trust_effect_z + Demog,
-                 data=mod.dat,
-                 prior = set_prior("normal(0,5)", class = "b"))
+# m_fact1 <- brm(MR1~trust_effect_z + Demog,
+#                  data=mod.dat,
+#                  prior = set_prior("normal(0,5)", class = "b"))
 # saveRDS(m_fact1,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/fact1.RDS')
-#m_fact1 <- readRDS('../output/fact1.RDS')
+m_fact1 <- readRDS('../output/fact1.RDS')
 
-m_fact2 <- brm(MR2~trust_effect_z + Demog,
-                 data=mod.dat,
-                 prior = set_prior("normal(0,5)", class = "b"))
+# m_fact2 <- brm(MR2~trust_effect_z + Demog,
+#                  data=mod.dat,
+#                  prior = set_prior("normal(0,5)", class = "b"))
 # saveRDS(m_fact2,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/fact2.RDS')
-#m_fact2 <- readRDS('../output/fact2.RDS')
+m_fact2 <- readRDS('../output/fact2.RDS')
 
-m_fact3 <- brm(MR3~trust_effect_z + Demog,
-                 data=mod.dat,
-                 prior = set_prior("normal(0,5)", class = "b"))
+# m_fact3 <- brm(MR3~trust_effect_z + Demog,
+#                  data=mod.dat,
+#                  prior = set_prior("normal(0,5)", class = "b"))
 # saveRDS(m_fact3,
 #         '/Users/travis/Documents/gits/protest_legitimacy/output/fact3.RDS')
-#m_fact3 <- readRDS('../output/fact3.RDS')
+m_fact3 <- readRDS('../output/fact3.RDS')
 
 m_fact1 %>%
   spread_draws(b_trust_effect_z) %>%
@@ -2124,13 +2167,42 @@ cowplot::plot_grid(cowplot::plot_grid(fact1_demog_plot +
                    legend, ncol=3, rel_widths =c(.9, 1, .2) )
 ```
 
-Figure \@ref(fig:dim-analysis) displays the models fit to these data. African American oriented sources are roughly less likely to emphasize the first factor than are general public oriented sources (General Public = `r round(fact1_preds$.value[2], 2)`, [`r round(fact1_preds$.lower[2], 2)`, `r round(fact1_preds$.upper[2], 2)`]; African American = `r round(fact1_preds$.value[1], 2)`, [`r round(fact1_preds$.lower[1], 2)`, `r round(fact1_preds$.upper[1], 2)`],  $prob_{gp>aa}$ > .99). 
+Figure \@ref(fig:dim-analysis) displays the models fit to these data. In comparison to the general public, African American oriented sources are less likely to emphasize the first factor (General Public = `r round(fact1_preds$.value[2], 2)`, [`r round(fact1_preds$.lower[2], 2)`, `r round(fact1_preds$.upper[2], 2)`]; African American = `r round(fact1_preds$.value[1], 2)`, [`r round(fact1_preds$.lower[1], 2)`, `r round(fact1_preds$.upper[1], 2)`],  $prob_{gp>aa}$ = `r round(sum(fact1_mat[,3]>0)/4000, 2)`) and second factor (General Public = `r round(fact2_preds$.value[2], 2)`, [`r round(fact2_preds$.lower[2], 2)`, `r round(fact2_preds$.upper[2], 2)`]; African American = `r round(fact2_preds$.value[1], 2)`, [`r round(fact2_preds$.lower[1], 2)`, `r round(fact2_preds$.upper[1], 2)`],  $prob_{gp>aa}$ > .99). 
 
-In contrast, the general public news sources are much less likely to emphasize the second factor than African American oriented sources (General Public = `r round(fact2_preds$.value[2], 2)`, [`r round(fact2_preds$.lower[2], 2)`, `r round(fact2_preds$.upper[2], 2)`]; African American = `r round(fact2_preds$.value[1], 2)`, [`r round(fact2_preds$.lower[1], 2)`, `r round(fact2_preds$.upper[1], 2)`],  $prob_{gp>aa}$ < .01). 
-
-Emphasis on the third factor is roughly equal between these two groups (General Public = `r round(fact3_preds$.value[2], 2)`, [`r round(fact3_preds$.lower[2], 2)`, `r round(fact3_preds$.upper[2], 2)`]; African American = `r round(fact3_preds$.value[1], 2)`, [`r round(fact3_preds$.lower[1], 2)`, `r round(fact3_preds$.upper[1], 2)`],  $prob_{gp>aa}$ = `r round(sum(fact3_mat[,3]>0)/4000, 2)`).
+In contrast, the general public news sources are much less likely to emphasize the third factor than African American oriented sources (General Public = `r round(fact3_preds$.value[2], 2)`, [`r round(fact3_preds$.lower[2], 2)`, `r round(fact3_preds$.upper[2], 2)`]; African American = `r round(fact3_preds$.value[1], 2)`, [`r round(fact3_preds$.lower[1], 2)`, `r round(fact3_preds$.upper[1], 2)`],  $prob_{gp>aa}$ = `r round(sum(fact3_mat[,3]>0)/4000, 2)`).
 
 The effect of political orientation is generally positive across all three factors, such that more conservative sources are somewhat more likely to emphasize all three factors than more liberal sources, but we cannot completely rule out zero effect of political orientation for any factor ($factor 1$ = `r round(fact1_trust_slope[1,1], 2)`, [`r round(fact1_trust_slope[1,2], 2)`, `r round(fact1_trust_slope[1,3], 2)`]; $factor 2$ = `r round(fact2_trust_slope[1,1], 2)`, [`r round(fact2_trust_slope[1,2], 2)`, `r round(fact2_trust_slope[1,3], 2)`]; $factor 3$ = `r round(fact3_trust_slope[1,1], 2)`, [`r round(fact3_trust_slope[1,2], 2)`, `r round(fact3_trust_slope[1,3], 2)`]).
+
+## Model Comparison for segregating out UK sources
+Because there are likely some differences in the way that North American and European news sources cover this event, we wanted to be sure that we were not overlooking systematic differences between these two subgroups of news organizations. However, we were also cognizant that simply looking for differences between these groups has the potential to mislead. Since there are only 6 UK sources, estimates for that group are likely to be highly variable. So, we used a bayes factor model comparison procedure to evaluate whether the data more strongly support statistical models with just two source audience groupings (African American vs General Public, & UK). Bayes factor model comparisons yield a factor (K) that indicates the strength of the support for model 1 over model 2. Kass & Raftery provide some guidance in interpreting K:
+
+1 to 3.2 = Not worth more than a bare mention
+3.2 to 10 = Substantial
+10 to 100 = Strong
+100+ = Decisive
+
+We ran model comparisons for models of police and protest words, disruptive protest words, police and protest images, legitimizing words and images, legitimizing words, michael brown images, injunctive and descriptive death verbs, and words for race, innocence, young, and references to Michael Brown's name
+
+```{r bf}
+tempdf <- data.frame(model = c('Protest Images', 'Police Images', 
+                               'Michael Brown Images', 'Race Words', 
+                               'Unarmed Words', 'Youth Words', 
+                               'Michael Brown Words', 'Injunctive Death Verbs',
+                               'Descriptive Death Verbs', 'Police Words', 
+                               'Protest Words', 'Disruptive Protest Words',
+                               'Legitimizing Words and Images', 
+                               'Legitimizing Words'),
+                     bf = c(bf_prot_img$bf, bf_pol_img$bf,
+                            bf_combined.pix$bf, bf_race$bf,
+                            bf_inn$bf, bf_young$bf, bf_mb$bf,
+                            bf_active.kill$bf, bf_passive.kill$bf, 
+                            bf_pol$bf, bf_prot$bf, bf_prot_neg$bf,
+                            bf_combined$bf, bf_combined.w$bf))
+
+tempdf
+```
+
+Of these 14 model comparisons, just two indicate that the data is in favor of the models with three sources: models for Michael Brown words and Michael Brown Pictures. 
 
 ## Counting references (vs. presence/absence)
 We repeated many of the analyses described above, but instead of scoring each article in a binary fashion (presence or absence of any of the words), we summed the number of times a text had references to one of the target words. For these analyses, any target that was a bigram (e.g. 'Michael Brown') was counted as one hit, rather than two. Additionally, although we occasionally search for unigrams that are subsets of larger bigrams (as in searching for both 'Brown' and 'Michael Brown'), hits in these cases are mutually exclusive (e.g. if the phrase 'Michael Brown' appears in the article, it would only match on 'Michael Brown' and would not match on 'Brown', thus yielding 1 hit from the target list).
