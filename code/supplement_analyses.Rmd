@@ -27,6 +27,12 @@ library(viridis)
 
 options(mc.cores = parallel::detectCores())
 
+# Change this to TRUE when you wish to rerun all models (e.g., the first time you knit this)
+# Models will be saved to ../output/ and will only be reloaded when this is FALSE
+# All of these models are tagged with [MODELS] [/MODELS]
+# To run only specific models, run them manually
+RUN_MODELS <- FALSE
+
 df_arts <- read.csv('../data/art_titles.csv') # article data
 df_caps <- read.csv('../data/img_caps.csv') # image caption data
 df_sources <- read.csv('../data/source_estimates_mturk.csv') # source pol leaning data
@@ -50,7 +56,11 @@ df_sources %>%
            sd(consumption_effect)) -> df_sources #standardize pol orientation values
 ```
 
-In this analysis supplement, we follow the main structure of the preregistration on OSF (https://osf.io/sd58n/), presenting first each preregistered analysis and its result followed by alternative, exploratory analyses and their results.
+In this analysis supplement, we include all the analyses we attempted, and the code we used, whether or not they are included in the final manuscript. When exploratory (non-preregistered) analyses were undertaken, we have labeled them as such. You can find the preregistration on OSF (https://osf.io/sd58n/).
+
+This was our first attemp at interpretating these analyses. We subsequently thought about how these results informed our questions and matched with existing research. Therefore, the explanations and interpretations might differ slightly from the manuscript, including in the wording used to describe concepts.
+
+In terms of wording change, what is referred to as *disruptive protest* in the manuscript was referred to here as *negative protest*. When referring to Michael Brown's death, the word category referred to here as *active kill* is referred to in the manuscript as *active, agent-caused death*, while the category of *passive kill* is referred to as *neutral, non-agentic death*. We keep the original language here to allow readers to more easily connect these analyses with the preregistration document.
 
 # Descriptives
 These data are drawn from press coverage of the 2014 shooting of Michael Brown and subsequent protests in Ferguson, MO. We collected all articles mentioning "Ferguson" published in the 10 days following the shooting by the top overall 51 online news organizations and the top 18 African American news organizations, as indicated by Pew Research. Our final data includes the text of all articles mentioning the correct Ferguson (screened manually by research assistants), along with all images included online within each article. In this work, we focus on article headlines, *featured* images, and featured image captions. Featured images are those embedded in the text of the article published online (as opposed to images included as part of a gallery that is linked to within an article). Each featured image was coded by a pair of research assistants as depicting Michael Brown, protest, and/or police.
@@ -195,21 +205,19 @@ scored_dat %>%
   left_join(df_audience, by = "Source") %>% # add audience information
   ungroup() -> mod.dat
 
-# Uncomment the following code to run models when knitting for the first time
-# Models will be automatically saved to ./output/ folder
+
 # [MODELS]
+if(RUN_MODELS==T){
+m_pol <- brm(police_ref~trust_effect_z + Demog + (1|Source), data=mod.dat,
+             prior = set_prior("normal(0,5)", class = "b"),
+             family='bernoulli', save_all_pars=T)
 
-# m_pol <- brm(police_ref~trust_effect_z + Demog + (1|Source), data=mod.dat,
-#              prior = set_prior("normal(0,5)", class = "b"),
-#              family='bernoulli', save_all_pars=T)
-# 
-# m_prot <- brm(protest_ref~trust_effect_z + Demog + (1|Source), data=mod.dat,
-#              prior = set_prior("normal(0,5)", class = "b"),
-#              family='bernoulli', save_all_pars=T)
-# saveRDS(m_pol, './output/tempmod_pol.RDS')
-# saveRDS(m_prot, './output/tempmod_prot.RDS')
-
-
+m_prot <- brm(protest_ref~trust_effect_z + Demog + (1|Source), data=mod.dat,
+             prior = set_prior("normal(0,5)", class = "b"),
+             family='bernoulli', save_all_pars=T)
+saveRDS(m_pol, '../output/tempmod_pol.RDS')
+saveRDS(m_prot, '../output/tempmod_prot.RDS')
+}
 #[/MODELS]
 
 m_pol <- readRDS('../output/tempmod_pol.RDS')
@@ -335,15 +343,20 @@ The associaton between political leaning and references to these concepts is not
 ```{r mod-no-fox}
 mod.dat %>% filter(Source!='FoxNews') -> nofox.mod
 
-# m_pol.nf <- brm(police_ref~trust_effect_z + Demog + (1|Source), data=nofox.mod,
-#              prior = set_prior("normal(0,5)", class = "b"),
-#              family='bernoulli')
-# 
-# m_prot.nf <- brm(protest_ref~trust_effect_z + Demog + (1|Source), data=nofox.mod,
-#              prior = set_prior("normal(0,5)", class = "b"),
-#              family='bernoulli')
-# saveRDS(m_pol.nf, './output/tempmod_pol_nf.RDS')
-# saveRDS(m_prot.nf, './output/tempmod_prot_nf.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_pol.nf <- brm(police_ref~trust_effect_z + Demog + (1|Source), data=nofox.mod,
+             prior = set_prior("normal(0,5)", class = "b"),
+             family='bernoulli', save_all_pars=T)
+
+m_prot.nf <- brm(protest_ref~trust_effect_z + Demog + (1|Source), data=nofox.mod,
+             prior = set_prior("normal(0,5)", class = "b"),
+             family='bernoulli', save_all_pars=T)
+saveRDS(m_pol.nf, '../output/tempmod_pol_nf.RDS')
+saveRDS(m_prot.nf, '../output/tempmod_prot_nf.RDS')
+}
+#[/MODELS]
+
 m_pol.nf <- readRDS('../output/tempmod_pol_nf.RDS')
 m_prot.nf <- readRDS('../output/tempmod_prot_nf.RDS')
 
@@ -366,29 +379,30 @@ Refit models after creating a third category of source audience, UK General Audi
 ```{r 3group-PolOrient}
 # Uncomment to run models for the first time
 # [MODELS]
+if(RUN_MODELS==T){
+  
+m_pol2 <- brm(police_ref~trust_effect_z + Demog2 + (1|Source), data=mod.dat,
+              prior = set_prior("normal(0,5)", class = "b"),
+              family='bernoulli', save_all_pars=T)
 
-# m_pol2 <- brm(police_ref~trust_effect_z + Demog2 + (1|Source), data=mod.dat,
-#               prior = set_prior("normal(0,5)", class = "b"),
-#               family='bernoulli', save_all_pars=T)
-# 
-# m_prot2 <- brm(protest_ref~trust_effect_z + Demog2 + (1|Source), data=mod.dat,
-#              prior = set_prior("normal(0,5)", class = "b"),
-#              family='bernoulli', save_all_pars=T)
-# saveRDS(m_pol2, './output/tempmod_pol2.RDS')
-# saveRDS(m_prot2, './output/tempmod_prot2.RDS')
+m_prot2 <- brm(protest_ref~trust_effect_z + Demog2 + (1|Source), data=mod.dat,
+             prior = set_prior("normal(0,5)", class = "b"),
+             family='bernoulli', save_all_pars=T)
+saveRDS(m_pol2, '../output/tempmod_pol2.RDS')
+saveRDS(m_prot2, '../output/tempmod_prot2.RDS')
 
+}
 # [/MODELS]
 
 m_pol2 <- readRDS('../output/tempmod_pol2.RDS')
 m_prot2 <- readRDS('../output/tempmod_prot2.RDS')
 
-bf_prot <- bayes_factor(m_prot, m_prot2) #1.46
-bf_pol <- bayes_factor(m_pol, m_pol2) #23.16
+#bf_prot <- bayes_factor(m_prot, m_prot2) #1.46
+#bf_pol <- bayes_factor(m_pol, m_pol2) #23.16
 
 
 ```
 
-We compared the models with 2 and 3 source audience categories using Bayes' Factors. For the model of protest-related words, the BF was `r round(bf_prot,2)`, slightly favoring the 2-category model. For the model of police-related words, the BF was `r round(bf_pol,2)`, also favoring the 2-category model.
 
 ##### Removing African-American oriented sources & Adding text type
 
@@ -401,16 +415,16 @@ mod.dat %>% #filter out all AA oriented source
 
 # Uncomment to run models for the first time
 # [MODELS]
-
-# m_pol_genpub <- brm(police_ref ~ trust_effect_z + (1|Source), data=mod.dat.genpub,
-#                     prior = set_prior("normal(0,5)", class = "b"),
-#                     family='bernoulli')
-# m_prot_genpub <- brm(protest_ref ~ trust_effect_z + (1|Source), data=mod.dat.genpub,
-#                      prior = set_prior("normal(0,5)", class = "b"),
-#                      family='bernoulli')
-# saveRDS(m_pol_genpub, '../output/tempmod_pol_genpub.RDS')
-# saveRDS(m_prot_genpub, '../output/tempmod_prot_genpub.RDS')
-
+if(RUN_MODELS==T) {
+m_pol_genpub <- brm(police_ref ~ trust_effect_z + (1|Source), data=mod.dat.genpub,
+                    prior = set_prior("normal(0,5)", class = "b"),
+                    family='bernoulli', save_all_pars=T)
+m_prot_genpub <- brm(protest_ref ~ trust_effect_z + (1|Source), data=mod.dat.genpub,
+                     prior = set_prior("normal(0,5)", class = "b"),
+                     family='bernoulli', save_all_pars=T)
+saveRDS(m_pol_genpub, '../output/tempmod_pol_genpub.RDS')
+saveRDS(m_prot_genpub, '../output/tempmod_prot_genpub.RDS')
+}
 # [/MODELS]
 
 # load saved models
@@ -429,18 +443,20 @@ m_prot_genpub %>%
 # # model text type (title vs. caption)
 # Uncomment to run models for the first time
 # [MODELS]
+if(RUN_MODELS==T){
+  
+m_prot_TvC <- brm(protest_ref ~ trust_effect_z + Demog + type + (type|Source),
+                  data=mod.dat, prior = set_prior("normal(0,5)", class = "b"),
+                  family='bernoulli', save_all_pars=T)
 
-# m_prot_TvC <- brm(protest_ref ~ trust_effect_z + Demog + type + (type|Source),
-#                   data=mod.dat, prior = set_prior("normal(0,5)", class = "b"),
-#                   family='bernoulli')
-# 
-# m_pol_TvC <- brm(police_ref ~ trust_effect_z + Demog + type + (type|Source),
-#                  data=mod.dat, prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli')
-# 
-# saveRDS(m_prot_TvC, '../output/tempmod_prot_TvC.RDS')
-# saveRDS(m_pol_TvC, '../output/tempmod_pol_TvC.RDS')
+m_pol_TvC <- brm(police_ref ~ trust_effect_z + Demog + type + (type|Source),
+                 data=mod.dat, prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars=T)
 
+saveRDS(m_prot_TvC, '../output/tempmod_prot_TvC.RDS')
+saveRDS(m_pol_TvC, '../output/tempmod_pol_TvC.RDS')
+
+}
 # [/MODELS]
 
 # load saved models
@@ -554,6 +570,8 @@ kable(tab1, caption = 'A random sample of texts from the three most conservative
 
 Overall, this spotlight analysis supports the prior model results, suggesting that the three most conservative sources are notably more likely to refer to police than the three most liberal sources, whereas the difference between these sources' references to protest are not as clear-cut. On the liberal end, the three sources are less likely to refer to protest the more liberal they are. On the conservative end, the least conservative of the three most conservative sources is the most likely to refer to protest, with the most conservative sources being less likely to refer to protest. However, these results also support the prior model results suggesting that there may be a trend toward conservative sources being more likely to refer to protest than liberal sources.
 
+After completing the analysis above we realized it was not as informative as we had hoped. Therefore, we chose not run other spotlight analyses, despite having preregistered them.
+
 ## Focusing on negative protest words
 
 > 4. Steps 2-3 will be repeated for negative protest words [riot\*|loot\*],(...)
@@ -611,13 +629,12 @@ scored_dat %>%
 
 # Uncomment to run models for the first time
 # [MODELS]
-
-# m_prot_neg <- brm(neg_protest_ref~trust_effect_z + Demog + (1|Source),
-#                   data=mod.dat, prior = set_prior("normal(0,5)", class = "b"),
-#                   family='bernoulli', save_all_pars = T)
-# saveRDS(m_prot_neg,
-#         './output/tempmod_prot_neg.RDS')
-
+if(RUN_MODELS==T){
+m_prot_neg <- brm(neg_protest_ref~trust_effect_z + Demog + (1|Source),
+                  data=mod.dat, prior = set_prior("normal(0,5)", class = "b"),
+                  family='bernoulli', save_all_pars = T)
+saveRDS(m_prot_neg, '../output/tempmod_prot_neg.RDS')
+}
 # [/MODELS]
 
 m_prot_neg <- readRDS('../output/tempmod_prot_neg.RDS')
@@ -694,13 +711,17 @@ Again, there is a slight tendency for more conservative sources to be more likel
 mod.dat %>%
   filter(Source!='FoxNews') -> nofox.mod
 
-# m_prot_neg.nf <- brm(neg_protest_ref~trust_effect_z + Demog + (1|Source),
-#                      data=nofox.mod,
-#                      prior = set_prior("normal(0,5)", class = "b"),
-#                      family='bernoulli')
-# 
-# saveRDS(m_prot_neg.nf,
-#         './output/tempmod_prot_neg_nf.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_prot_neg.nf <- brm(neg_protest_ref~trust_effect_z + Demog + (1|Source),
+                     data=nofox.mod,
+                     prior = set_prior("normal(0,5)", class = "b"),
+                     family='bernoulli', save_all_pars=T)
+
+saveRDS(m_prot_neg.nf,
+        '../output/tempmod_prot_neg_nf.RDS')
+}
+#[/MODELS]
 m_prot_neg.nf <- readRDS('../output/tempmod_prot_neg_nf.RDS')
 
 m_prot_neg.nf %>%
@@ -713,19 +734,21 @@ Once again, Fox News acts as a point with high leverage. Excluding Fox News and 
 ##### 2 vs. 3 source audience groups
 
 ```{r 3-group-mlm-neg-models}
-# m_prot_neg2 <- brm(neg_protest_ref~trust_effect_z + Demog2 + (1|Source),
-#                   data=mod.dat, prior = set_prior("normal(0,5)", class = "b"),
-#                   family='bernoulli', save_all_pars = T)
-# saveRDS(m_prot_neg2,
-#         './output/tempmod_prot_neg2.RDS')
+
+#[MODELS]
+if(RUN_MODELS==T){
+m_prot_neg2 <- brm(neg_protest_ref~trust_effect_z + Demog2 + (1|Source),
+                  data=mod.dat, prior = set_prior("normal(0,5)", class = "b"),
+                  family='bernoulli', save_all_pars=T)
+saveRDS(m_prot_neg2, '../output/tempmod_prot_neg2.RDS')
+}
+#[/MODELS]
+
 m_prot_neg2 <- readRDS('../output/tempmod_prot_neg2.RDS')
-bf_prot_neg <- bayes_factor(m_prot_neg, m_prot_neg2) #4.41
-
-
+#bf_prot_neg <- bayes_factor(m_prot_neg, m_prot_neg2) #4.41
 
 ```
 
-Comparing the models with 2 and 3 source audience categories using Bayes' Factors, we see that the BF was `r round(bf_prot_neg,2)`, again favoring the 2-category model.
 
 ##### Removing African-American oriented sources & Adding Text Type
 
@@ -734,14 +757,16 @@ Comparing the models with 2 and 3 source audience categories using Bayes' Factor
 mod.dat %>% #filter out all AA oriented source
   filter(Demog == "General-public") -> mod.dat.genpub
 
-#Rerun the model
-# m_prot_neg_genpub <- brm(neg_protest_ref ~ trust_effect_z + (1|Source),
-#                          data=mod.dat.genpub,
-#                          prior = set_prior("normal(0,5)", class = "b"),
-#                          family='bernoulli')
-# 
-# saveRDS(m_prot_neg_genpub, '../output/tempmod_prot_neg_genpub.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_prot_neg_genpub <- brm(neg_protest_ref ~ trust_effect_z + (1|Source),
+                         data=mod.dat.genpub,
+                         prior = set_prior("normal(0,5)", class = "b"),
+                         family='bernoulli', save_all_pars=T)
 
+saveRDS(m_prot_neg_genpub, '../output/tempmod_prot_neg_genpub.RDS')
+}
+#[/MODELS]
 # load saved model
 m_prot_neg_genpub <- readRDS('../output/tempmod_prot_neg_genpub.RDS')
 
@@ -750,11 +775,16 @@ m_prot_neg_genpub %>%
   median_hdi() -> neg_protest_trust_slope_genpub
 
 #model text type (title vs. caption)
-# m_prot_neg_TvC <- brm(neg_protest_ref ~ trust_effect_z + Demog + type + (type|Source), data=mod.dat,
-#                       prior = set_prior("normal(0,5)", class = "b"),
-#                       family='bernoulli', iter = 4000)
-# 
-# saveRDS(m_prot_neg_TvC, '../output/tempmod_prot_neg_TvC.RDS')
+
+#[MODELS]
+if(RUN_MODELS==T){
+m_prot_neg_TvC <- brm(neg_protest_ref ~ trust_effect_z + Demog + type + (type|Source), data=mod.dat,
+                      prior = set_prior("normal(0,5)", class = "b"),
+                      family='bernoulli', save_all_pars=T, iter = 4000)
+
+saveRDS(m_prot_neg_TvC, '../output/tempmod_prot_neg_TvC.RDS')
+}
+#[/MODELS]
 
 # load saved model
 m_prot_neg_TvC <- readRDS('../output/tempmod_prot_neg_TvC.RDS')
@@ -789,20 +819,20 @@ featured_imgs %>%
 
 # Uncomment to run models for the first time
 # [MODELS]
+if(RUN_MODELS==T){
+m_pol_img <- brm(Police~trust_effect_z + Demog + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars=T)
 
-# m_pol_img <- brm(Police~trust_effect_z + Demog + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-# 
-# m_prot_img <- brm(Protest~trust_effect_z + Demog + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-#
-# saveRDS(m_pol_img, './output/tempmod_pol_img.RDS')
-# saveRDS(m_prot_img, './output/tempmod_prot_img.RDS')
+m_prot_img <- brm(Protest~trust_effect_z + Demog + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars=T)
 
+saveRDS(m_pol_img, '../output/tempmod_pol_img.RDS')
+saveRDS(m_prot_img, '../output/tempmod_prot_img.RDS')
+}
 #[/MODELS]
 
 m_pol_img <- readRDS('../output/tempmod_pol_img.RDS')
@@ -929,16 +959,20 @@ We repeated the same analysis, but examining the probability that sources' featu
 
 ```{r img-mod-no-fox}
 mod.dat %>% filter(Source!='FoxNews') -> nofox.mod
+#[MODELS]
+if(RUN_MODELS==T){
+m_pol.nf <- brm(Police~trust_effect_z + Demog + (1|Source), data=nofox.mod,
+             prior = set_prior("normal(0,5)", class = "b"),
+             family='bernoulli', save_all_pars=T)
 
-# m_pol.nf <- brm(Police~trust_effect_z + Demog + (1|Source), data=nofox.mod,
-#              prior = set_prior("normal(0,5)", class = "b"),
-#              family='bernoulli')
-# 
-# m_prot.nf <- brm(Protest~trust_effect_z + Demog + (1|Source), data=nofox.mod,
-#              prior = set_prior("normal(0,5)", class = "b"),
-#              family='bernoulli')
-# saveRDS(m_pol.nf, '../output/tempmod_pol_img_nf.RDS')
-# saveRDS(m_prot.nf, '../output/tempmod_prot_img_nf.RDS')
+m_prot.nf <- brm(Protest~trust_effect_z + Demog + (1|Source), data=nofox.mod,
+             prior = set_prior("normal(0,5)", class = "b"),
+             family='bernoulli', save_all_pars=T)
+saveRDS(m_pol.nf, '../output/tempmod_pol_img_nf.RDS')
+saveRDS(m_prot.nf, '../output/tempmod_prot_img_nf.RDS')
+}
+#[/MODELS]
+
 m_pol.nf <- readRDS('../output/tempmod_pol_img_nf.RDS')
 m_prot.nf <- readRDS('../output/tempmod_prot_img_nf.RDS')
 
@@ -957,26 +991,26 @@ These models also indicate that the association between political orientation an
 ##### 2 vs. 3 source audience groups
 ```{r 3group-prot-pol-image}
 # [MODELS]
+if(RUN_MODELS==T){
+m_pol_img2 <- brm(Police~trust_effect_z + Demog2 + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars = T)
+saveRDS(m_pol_img2, '../output/tempmod_pol_img2.RDS')
 
-# m_pol_img2 <- brm(Police~trust_effect_z + Demog2 + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-# saveRDS(m_pol_img2, './output/tempmod_pol_img2.RDS')
-#
-# m_prot_img2 <- brm(Protest~trust_effect_z + Demog2 + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-# saveRDS(m_prot_img2, './output/tempmod_prot_img2.RDS')
-
+m_prot_img2 <- brm(Protest~trust_effect_z + Demog2 + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars=T)
+saveRDS(m_prot_img2, '../output/tempmod_prot_img2.RDS')
+}
 #[/MODELS]
 
 m_pol_img2 <- readRDS('../output/tempmod_pol_img2.RDS')
-bf_pol_img <- bayes_factor(m_pol_img, m_pol_img2) #30.46
+#bf_pol_img <- bayes_factor(m_pol_img, m_pol_img2) #30.46
 
 m_prot_img2 <- readRDS('../output/tempmod_prot_img2.RDS')
-bf_prot_img <- bayes_factor(m_prot_img, m_prot_img2) #23.83
+#bf_prot_img <- bayes_factor(m_prot_img, m_prot_img2) #23.83
 
 
 ```
@@ -985,16 +1019,20 @@ bf_prot_img <- bayes_factor(m_prot_img, m_prot_img2) #23.83
 ```{r prot-pol-image-robust}
 mod.dat %>% filter(Demog=='General-public') -> mod.dat.genpub
 
-# m_pol_genpub <- brm(Police~trust_effect_z + (1|Source), data=mod.dat.genpub,
-#                     prior = set_prior("normal(0,5)", class = "b"),
-#                     family='bernoulli', iter = 4000)
-# 
-# m_prot_genpub <- brm(Protest~trust_effect_z + (1|Source), data=mod.dat.genpub,
-#                      prior = set_prior("normal(0,5)", class = "b"),
-#                      family='bernoulli', iter = 4000)
-# # save models
-# saveRDS(m_pol_genpub, '../output/tempmod_pol_img_genpub.RDS')
-# saveRDS(m_prot_genpub, '../output/tempmod_prot_img_genpub.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_pol_genpub <- brm(Police~trust_effect_z + (1|Source), data=mod.dat.genpub,
+                    prior = set_prior("normal(0,5)", class = "b"),
+                    family='bernoulli', save_all_pars=T, iter = 4000)
+
+m_prot_genpub <- brm(Protest~trust_effect_z + (1|Source), data=mod.dat.genpub,
+                     prior = set_prior("normal(0,5)", class = "b"),
+                     family='bernoulli', save_all_pars=T, iter = 4000)
+# save models
+saveRDS(m_pol_genpub, '../output/tempmod_pol_img_genpub.RDS')
+saveRDS(m_prot_genpub, '../output/tempmod_prot_img_genpub.RDS')
+}
+#[/MODELS]
 
 # load saved models
 m_pol_genpub <- readRDS('../output/tempmod_pol_img_genpub.RDS')
@@ -1114,16 +1152,16 @@ scored_dat %>%
   left_join(df_audience) %>%
   ungroup() -> mod.dat
 
-#Uncomment to run models for the first time
+
 # [MODELS]
+if(RUN_MODELS==T){
+m_combined <- brm(any_ref~trust_effect_z + Demog + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars = T)
 
-# m_combined <- brm(any_ref~trust_effect_z + Demog + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-#
-# saveRDS(m_combined, './output/combined_img_text.RDS')
-
+saveRDS(m_combined, '../output/combined_img_text.RDS')
+}
 #[/MODELS]
 
 m_combined <- readRDS('../output/combined_img_text.RDS')
@@ -1201,30 +1239,34 @@ As Figure \@ref(fig:combined-analysis) shows, more conservative sources are also
 ##### 2 vs. 3 source audience groups
 ```{r 3grooups-combined-analysis}
 # [MODELS]
+if(RUN_MODELS==T){
+m_combined2 <- brm(any_ref~trust_effect_z + Demog2 + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars = T)
 
-# m_combined2 <- brm(any_ref~trust_effect_z + Demog2 + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-#
-# saveRDS(m_combined2, './output/combined_img_text2.RDS')
-
+saveRDS(m_combined2, '../output/combined_img_text2.RDS')
+}
 # [/MODELS]
 
 m_combined2 <- readRDS('../output/combined_img_text2.RDS')
-bf_combined <- bayes_factor(m_combined, m_combined2)
+#bf_combined <- bayes_factor(m_combined, m_combined2)
 ```
 
 ##### Removing African-American oriented sources & Adding text type
 ```{r combined-analysis-robust, include = FALSE}
 mod.dat %>% filter(Demog == 'General-public') -> mod.dat.genpub
 
-# m_combined_genpub <- brm(any_ref~trust_effect_z + (1|Source),
-#                          data=mod.dat.genpub,
-#                          prior = set_prior("normal(0,5)", class = "b"),
-#                          family='bernoulli', iter = 4000)
-# 
-# saveRDS(m_combined_genpub, '../output/combined_img_text_genpub.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_combined_genpub <- brm(any_ref~trust_effect_z + (1|Source),
+                         data=mod.dat.genpub,
+                         prior = set_prior("normal(0,5)", class = "b"),
+                         family='bernoulli', save_all_pars=T, iter = 4000)
+
+saveRDS(m_combined_genpub, '../output/combined_img_text_genpub.RDS')
+}
+#[/MODELS]
 
 m_combined_genpub <- readRDS('../output/combined_img_text_genpub.RDS')
 
@@ -1232,14 +1274,17 @@ m_combined_genpub %>%
   spread_draws(b_trust_effect_z) %>%
   median_hdi() -> combined_trust_slope_genpub
 
-
 # Title vs. Caption
-# m_combined_TvC <- brm(any_ref~trust_effect_z + Demog + type + (type|Source),
-#                       data=mod.dat,
-#                       prior = set_prior("normal(0,5)", class = "b"),
-#                       family='bernoulli', iter = 4000)
-# 
-# saveRDS(m_combined_TvC, '../output/combined_img_text_TvC.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_combined_TvC <- brm(any_ref~trust_effect_z + Demog + type + (type|Source),
+                      data=mod.dat,
+                      prior = set_prior("normal(0,5)", class = "b"),
+                      family='bernoulli', save_all_pars=T, iter = 4000)
+
+saveRDS(m_combined_TvC, '../output/combined_img_text_TvC.RDS')
+}
+#[/MODELS]
 
 m_combined_TvC <- readRDS('../output/combined_img_text_TvC.RDS')
 
@@ -1279,12 +1324,16 @@ scored_dat %>%
   left_join(df_audience) %>%
   ungroup() -> mod.dat
 
-# m_combined.w <- brm(target_ref~trust_effect_z + Demog + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-# 
-# saveRDS(m_combined.w, './output/combined_text.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_combined.w <- brm(target_ref~trust_effect_z + Demog + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars = T)
+
+saveRDS(m_combined.w, '../output/combined_text.RDS')
+}
+#[/MODELS]
 
 m_combined.w <- readRDS('../output/combined_text.RDS')
 
@@ -1361,15 +1410,17 @@ Once again, more conservative sources are also more likely to refer to this macr
 ##### 2 vs. 3 source audience groups
 
 ```{r 3groups-macro-cat-words-only}
-
-# m_combined.w2 <- brm(target_ref~trust_effect_z + Demog2 + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-# saveRDS(m_combined.w2, './output/combined_text2.RDS')
-
+#[MODELS]
+if(RUN_MODELS==T){
+m_combined.w2 <- brm(target_ref~trust_effect_z + Demog2 + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars = T)
+saveRDS(m_combined.w2, '../output/combined_text2.RDS')
+}
+#[/MODELS]
 m_combined.w2 <- readRDS('../output/combined_text2.RDS')
-bf_combined.w <- bayes_factor(m_combined.w, m_combined.w2) #4.01
+#bf_combined.w <- bayes_factor(m_combined.w, m_combined.w2) #4.01
 ```
 
 
@@ -1397,12 +1448,16 @@ scored_dat %>%
   left_join(df_audience) %>%
   ungroup() -> mod.dat
 
-# m_combined.pix <- brm(mb~trust_effect_z + Demog + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-# 
-# saveRDS(m_combined.pix, './output/combined_pix.RDS')
+# [MODELS]
+if(RUN_MODELS==T){
+m_combined.pix <- brm(mb~trust_effect_z + Demog + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars = T)
+
+saveRDS(m_combined.pix, '../output/combined_pix.RDS')
+}
+#[/MODELS]
 
 m_combined.pix <- readRDS('../output/combined_pix.RDS')
 
@@ -1479,16 +1534,19 @@ There is also no appreciable relationship between the political orientation of a
 ##### 2 vs. 3 source audience groups
 
 ```{r 3groups-macro-cat-imgs-only}
-
-# m_combined.pix2 <- brm(mb~trust_effect_z + Demog2 + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-# saveRDS(m_combined.pix2,
-#         './output/combined_pix2.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_combined.pix2 <- brm(mb~trust_effect_z + Demog2 + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars = T)
+saveRDS(m_combined.pix2,
+        '../output/combined_pix2.RDS')
+}
+#[/MODELS]
 
 m_combined.pix2 <- readRDS('../output/combined_pix2.RDS')
-bf_combined.pix <- bayes_factor(m_combined.pix, m_combined.pix2) #.01
+#bf_combined.pix <- bayes_factor(m_combined.pix, m_combined.pix2) #.01
 
 ```
 
@@ -1543,13 +1601,17 @@ scored_dat %>%
   left_join(df_audience) %>%
   ungroup() -> mod.dat
 
-# m_active.kill <- brm(target_ref~trust_effect_z + Demog + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-# 
-# saveRDS(m_active.kill,
-#         './output/active_kill.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_active.kill <- brm(target_ref~trust_effect_z + Demog + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars = T)
+
+saveRDS(m_active.kill,
+        '../output/active_kill.RDS')
+}
+#[/MODELS]
 
 m_active.kill <- readRDS('../output/active_kill.RDS')
 
@@ -1628,14 +1690,18 @@ In contrast, the association between political orientation and likelihood of usi
 ##### 2 vs. 3 source audience groups
 
 ```{r 3groups-mod-active-kill}
-# m_active.kill2 <- brm(target_ref~trust_effect_z + Demog2 + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-# saveRDS(m_active.kill2,
-#         './output/active_kill2.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_active.kill2 <- brm(target_ref~trust_effect_z + Demog2 + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars = T)
+saveRDS(m_active.kill2,
+        '../output/active_kill2.RDS')
+}
+#[/MODELS]
 m_active.kill2 <- readRDS('../output/active_kill2.RDS')
-bf_active.kill <- bayes_factor(m_active.kill, m_active.kill2) #17.49
+#bf_active.kill <- bayes_factor(m_active.kill, m_active.kill2) #17.49
 
 ```
 
@@ -1643,13 +1709,16 @@ bf_active.kill <- bayes_factor(m_active.kill, m_active.kill2) #17.49
 ```{r mod-active-kill-robust, include = FALSE}
 mod.dat %>% filter(Demog == 'General-public') -> mod.dat.genpub
 
-# m_active.kill_genpub <- brm(target_ref ~ trust_effect_z + (1|Source),
-#                             data=mod.dat.genpub,
-#                             prior = set_prior("normal(0,5)", class = "b"),
-#                             family='bernoulli', iter = 4000)
-# 
-# saveRDS(m_active.kill_genpub, '../output/active_kill_genpub.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_active.kill_genpub <- brm(target_ref ~ trust_effect_z + (1|Source),
+                            data=mod.dat.genpub,
+                            prior = set_prior("normal(0,5)", class = "b"),
+                            family='bernoulli', save_all_pars=T, iter = 4000)
 
+saveRDS(m_active.kill_genpub, '../output/active_kill_genpub.RDS')
+}
+#[/MODELS]
 m_active.kill_genpub <- readRDS('../output/active_kill_genpub.RDS')
 
 m_active.kill_genpub %>%
@@ -1657,12 +1726,16 @@ m_active.kill_genpub %>%
   median_hdi() -> active_kill_trust_slope_genpub
 
 # TvC
-# m_active.kill_TvC <- brm(target_ref ~ trust_effect_z + Demog + type + (type|Source),
-#                             data=mod.dat, #use all data
-#                             prior = set_prior("normal(0,5)", class = "b"),
-#                             family='bernoulli', iter = 4000)
-# 
-# saveRDS(m_active.kill_TvC, '../output/active_kill_TvC.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_active.kill_TvC <- brm(target_ref ~ trust_effect_z + Demog + type + (type|Source),
+                            data=mod.dat, #use all data
+                            prior = set_prior("normal(0,5)", class = "b"),
+                            family='bernoulli', save_all_pars=T, iter = 4000)
+
+saveRDS(m_active.kill_TvC, '../output/active_kill_TvC.RDS')
+}
+#[/MODELS]
 
 m_active.kill_TvC <- readRDS('../output/active_kill_TvC.RDS')
 
@@ -1735,12 +1808,16 @@ scored_dat %>%
   left_join(df_audience) %>%
   ungroup() -> mod.dat
 
-# m_passive.kill <- brm(target_ref~trust_effect_z + Demog + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-#
-# saveRDS(m_passive.kill, './output/passive_kill.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_passive.kill <- brm(target_ref~trust_effect_z + Demog + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars = T)
+
+saveRDS(m_passive.kill, '../output/passive_kill.RDS')
+}
+#[/MODELS]
 
 m_passive.kill <- readRDS('../output/passive_kill.RDS')
 
@@ -1820,17 +1897,18 @@ In contrast, we see a strong association between political orientation and likel
 ##### 2 vs. 3 source audience groups
 
 ```{r 3groups-mod-passive-kill}
+#[MODELS]
+if(RUN_MODELS==T){
+m_passive.kill2 <- brm(target_ref~trust_effect_z + Demog2 + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family='bernoulli', save_all_pars = T)
 
-# m_passive.kill2 <- brm(target_ref~trust_effect_z + Demog2 + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family='bernoulli', save_all_pars = T)
-# 
-# saveRDS(m_passive.kill2,
-#         './output/passive_kill2.RDS')
-
+saveRDS(m_passive.kill2, '../output/passive_kill2.RDS')
+}
+#[/MODELS]
 m_passive.kill2 <- readRDS('../output/passive_kill2.RDS')
-bf_passive.kill <- bayes_factor(m_passive.kill, m_passive.kill2) #1.07
+#bf_passive.kill <- bayes_factor(m_passive.kill, m_passive.kill2) #1.07
 
 ```
 
@@ -1838,13 +1916,16 @@ bf_passive.kill <- bayes_factor(m_passive.kill, m_passive.kill2) #1.07
 
 ```{r mod-passive-kill-robust, include = FALSE}
 mod.dat %>% filter(Demog == 'General-public') -> mod.dat.genpub
+#[MODELS]
+if(RUN_MODELS==T){
+m_passive.kill_genpub <- brm(target_ref ~ trust_effect_z + (1|Source),
+                             data=mod.dat.genpub,
+                             prior = set_prior("normal(0,5)", class = "b"),
+                             family='bernoulli', save_all_pars=T, iter = 4000)
 
-# m_passive.kill_genpub <- brm(target_ref ~ trust_effect_z + (1|Source),
-#                              data=mod.dat.genpub,
-#                              prior = set_prior("normal(0,5)", class = "b"),
-#                              family='bernoulli', iter = 4000)
-# 
-# saveRDS(m_passive.kill_genpub, '../output/passive_kill_genpub.RDS')
+saveRDS(m_passive.kill_genpub, '../output/passive_kill_genpub.RDS')
+}
+#[/MODELS]
 
 m_passive.kill_genpub <- readRDS('../output/passive_kill_genpub.RDS')
 
@@ -1853,12 +1934,16 @@ m_passive.kill_genpub %>%
   median_hdi() -> passive_kill_trust_slope_genpub
 
 # TvC
-# m_passive.kill_TvC <- brm(target_ref ~ trust_effect_z + Demog + type + (type|Source),
-#                             data=mod.dat, #use all data
-#                             prior = set_prior("normal(0,5)", class = "b"),
-#                             family='bernoulli', iter = 4000)
-# 
-# saveRDS(m_passive.kill_TvC, '../output/passive_kill_TvC.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_passive.kill_TvC <- brm(target_ref ~ trust_effect_z + Demog + type + (type|Source),
+                            data=mod.dat, #use all data
+                            prior = set_prior("normal(0,5)", class = "b"),
+                            family='bernoulli', save_all_pars=T, iter = 4000)
+
+saveRDS(m_passive.kill_TvC, '../output/passive_kill_TvC.RDS')
+}
+#[/MODELS]
 
 m_passive.kill_TvC <- readRDS('../output/passive_kill_TvC.RDS')
 
@@ -1896,6 +1981,11 @@ massacr\*]
 
 >8. Examine a correlation plot of the above variables
 
+>9. Conduct a factor analysis for the above variables, and retain any factor(s) with
+eigenvalues > 1 and repeat step 3 for these factors.
+
+>10. Repeat steps 1-6 where the outcome is scored as the count of the number of hits per
+article (e.g. compute the total number of times a source has a featured MB image + hits for the words in step). We model these data using multilevel regressions for count data, using poisson regressions if the counts are not overdispersed, and negative binomial if they are.
 In our next stage, we examined the overall relationships between many of the concepts we have explored above. In particular, each article was scored as having a reference/image in one of the following categories:
 
 - [Black | African American | white | Caucasian | race | ethnicity]
@@ -2007,21 +2097,24 @@ scored_dat %>%
   left_join(df_audience) %>%
   left_join(df_sources) -> mod.dat
 
-# m_race <- brm(race_ref~trust_effect_z + Demog + (1|Source),
-#               data=mod.dat,
-#               prior = set_prior("normal(0,5)", class = "b"),
-#               family='bernoulli', save_all_pars = T)
-# m_race2 <- brm(race_ref~trust_effect_z + Demog2 + (1|Source),
-#               data=mod.dat,
-#               prior = set_prior("normal(0,5)", class = "b"),
-#               family='bernoulli', save_all_pars = T)
-# saveRDS(m_race,
-#         './output/race.RDS')
-# saveRDS(m_race2,
-#         './output/race2.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_race <- brm(race_ref~trust_effect_z + Demog + (1|Source),
+              data=mod.dat,
+              prior = set_prior("normal(0,5)", class = "b"),
+              family='bernoulli', save_all_pars = T)
+m_race2 <- brm(race_ref~trust_effect_z + Demog2 + (1|Source),
+              data=mod.dat,
+              prior = set_prior("normal(0,5)", class = "b"),
+              family='bernoulli', save_all_pars = T)
+saveRDS(m_race,'../output/race.RDS')
+saveRDS(m_race2,'../output/race2.RDS')
+}
+#[/MODELS]
+
 m_race <- readRDS('../output/race.RDS')
 m_race2 <- readRDS('../output/race2.RDS')
-bf_race <- bayes_factor(m_race, m_race2)
+#bf_race <- bayes_factor(m_race, m_race2)
 
 
 mod.dat %>% 
@@ -2037,21 +2130,23 @@ race_preds %>%
          document='captions+titles') %>%
   rbind(plotting_data) -> plotting_data
 
-# m_inn <- brm(inn_ref~trust_effect_z + Demog + (1|Source),
-#               data=mod.dat,
-#               prior = set_prior("normal(0,5)", class = "b"),
-#               family='bernoulli', save_all_pars = T)
-# m_inn2 <- brm(inn_ref~trust_effect_z + Demog2 + (1|Source),
-#               data=mod.dat,
-#               prior = set_prior("normal(0,5)", class = "b"),
-#               family='bernoulli', save_all_pars = T)
-# saveRDS(m_inn,
-#         './output/innocence.RDS')
-# saveRDS(m_inn2,
-#         './output/innocence2.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_inn <- brm(inn_ref~trust_effect_z + Demog + (1|Source),
+              data=mod.dat,
+              prior = set_prior("normal(0,5)", class = "b"),
+              family='bernoulli', save_all_pars = T)
+m_inn2 <- brm(inn_ref~trust_effect_z + Demog2 + (1|Source),
+              data=mod.dat,
+              prior = set_prior("normal(0,5)", class = "b"),
+              family='bernoulli', save_all_pars = T)
+saveRDS(m_inn,'../output/innocence.RDS')
+saveRDS(m_inn2,'../output/innocence2.RDS')
+}
+#[/MODELS]
 m_inn <- readRDS('../output/innocence.RDS')
 m_inn2 <- readRDS('../output/innocence2.RDS')
-bf_inn <- bayes_factor(m_inn, m_inn2)
+#bf_inn <- bayes_factor(m_inn, m_inn2)
 
 mod.dat %>% 
   ungroup() %>%
@@ -2066,21 +2161,24 @@ inn_preds %>%
          document='captions+titles') %>%
   rbind(plotting_data) -> plotting_data
 
-# m_young <- brm(young_ref~trust_effect_z + Demog + (1|Source),
-#               data=mod.dat,
-#               prior = set_prior("normal(0,5)", class = "b"),
-#               family='bernoulli', save_all_pars = T)
-# m_young2 <- brm(young_ref~trust_effect_z + Demog2 + (1|Source),
-#               data=mod.dat,
-#               prior = set_prior("normal(0,5)", class = "b"),
-#               family='bernoulli', save_all_pars = T)
-# saveRDS(m_young,
-#         './output/young.RDS')
-# saveRDS(m_young2,
-#         './output/young2.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_young <- brm(young_ref~trust_effect_z + Demog + (1|Source),
+              data=mod.dat,
+              prior = set_prior("normal(0,5)", class = "b"),
+              family='bernoulli', save_all_pars = T)
+m_young2 <- brm(young_ref~trust_effect_z + Demog2 + (1|Source),
+              data=mod.dat,
+              prior = set_prior("normal(0,5)", class = "b"),
+              family='bernoulli', save_all_pars = T)
+saveRDS(m_young, '../output/young.RDS')
+saveRDS(m_young2, '../output/young2.RDS')
+}
+#[/MODELS]
+
 m_young <- readRDS('../output/young.RDS')
 m_young2 <- readRDS('../output/young2.RDS')
-bf_young <- bayes_factor(m_young, m_young2)
+#bf_young <- bayes_factor(m_young, m_young2)
 
 mod.dat %>% 
   ungroup() %>%
@@ -2094,23 +2192,24 @@ young_preds %>%
   mutate(measure='young',
          document='captions+titles') %>%
   rbind(plotting_data) -> plotting_data
+#[MODELS]
+if(RUN_MODELS==T){
+m_mb <- brm(mb_ref~trust_effect_z + Demog + (1|Source),
+              data=mod.dat,
+              prior = set_prior("normal(0,5)", class = "b"),
+              family='bernoulli', save_all_pars = T)
+m_mb2 <- brm(mb_ref~trust_effect_z + Demog2 + (1|Source),
+              data=mod.dat,
+              prior = set_prior("normal(0,5)", class = "b"),
+              family='bernoulli', save_all_pars = T)
 
-# m_mb <- brm(mb_ref~trust_effect_z + Demog + (1|Source),
-#               data=mod.dat,
-#               prior = set_prior("normal(0,5)", class = "b"),
-#               family='bernoulli', save_all_pars = T)
-# m_mb2 <- brm(mb_ref~trust_effect_z + Demog2 + (1|Source),
-#               data=mod.dat,
-#               prior = set_prior("normal(0,5)", class = "b"),
-#               family='bernoulli', save_all_pars = T)
-# 
-# saveRDS(m_mb,
-#         './output/mb.RDS')
-# saveRDS(m_mb2,
-#         './output/mb2.RDS')
+saveRDS(m_mb, '../output/mb.RDS')
+saveRDS(m_mb2, '../output/mb2.RDS')
+}
+#[/MODELS]
 m_mb <- readRDS('../output/mb.RDS')
 m_mb2 <- readRDS('../output/mb2.RDS')
-bf_mb <- bayes_factor(m_mb, m_mb2)
+#bf_mb <- bayes_factor(m_mb, m_mb2)
 
 mod.dat %>% 
   ungroup() %>%
@@ -2183,25 +2282,27 @@ cor_dat %>%
   left_join(df_audience) %>%
   left_join(df_sources) -> mod.dat
 
-# m_fact1 <- brm(MR1~trust_effect_z + Demog,
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"))
-# saveRDS(m_fact1,
-#         './output/fact1.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_fact1 <- brm(MR1~trust_effect_z + Demog,
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"))
+saveRDS(m_fact1, '../output/fact1.RDS')
+
+m_fact2 <- brm(MR2~trust_effect_z + Demog,
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"))
+saveRDS(m_fact2, '../output/fact2.RDS')
+
+m_fact3 <- brm(MR3~trust_effect_z + Demog,
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"))
+saveRDS(m_fact3, '../output/fact3.RDS')
+}
+#[/MODELS]
+
 m_fact1 <- readRDS('../output/fact1.RDS')
-
-# m_fact2 <- brm(MR2~trust_effect_z + Demog,
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"))
-# saveRDS(m_fact2,
-#         './output/fact2.RDS')
 m_fact2 <- readRDS('../output/fact2.RDS')
-
-# m_fact3 <- brm(MR3~trust_effect_z + Demog,
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"))
-# saveRDS(m_fact3,
-#         './output/fact3.RDS')
 m_fact3 <- readRDS('../output/fact3.RDS')
 
 m_fact1 %>%
@@ -2402,22 +2503,22 @@ Because there are likely some differences in the way that North American and Eur
 We ran model comparisons for models of police and protest words, disruptive protest words, police and protest images, legitimizing words and images, legitimizing words, michael brown images, injunctive and descriptive death verbs, and words for race, innocence, young, and references to Michael Brown's name
 
 ```{r bf}
-tempdf <- data.frame(model = c('Protest Images', 'Police Images', 
-                               'Michael Brown Images', 'Race Words', 
-                               'Unarmed Words', 'Youth Words', 
-                               'Michael Brown Words', 'Injunctive Death Verbs',
-                               'Descriptive Death Verbs', 'Police Words', 
-                               'Protest Words', 'Disruptive Protest Words',
-                               'Legitimizing Words and Images', 
-                               'Legitimizing Words'),
-                     bf = c(bf_prot_img$bf, bf_pol_img$bf,
-                            bf_combined.pix$bf, bf_race$bf,
-                            bf_inn$bf, bf_young$bf, bf_mb$bf,
-                            bf_active.kill$bf, bf_passive.kill$bf, 
-                            bf_pol$bf, bf_prot$bf, bf_prot_neg$bf,
-                            bf_combined$bf, bf_combined.w$bf))
-
-tempdf
+# tempdf <- data.frame(model = c('Protest Images', 'Police Images', 
+#                                'Michael Brown Images', 'Race Words', 
+#                                'Unarmed Words', 'Youth Words', 
+#                                'Michael Brown Words', 'Injunctive Death Verbs',
+#                                'Descriptive Death Verbs', 'Police Words', 
+#                                'Protest Words', 'Disruptive Protest Words',
+#                                'Legitimizing Words and Images', 
+#                                'Legitimizing Words'),
+#                      bf = c(bf_prot_img$bf, bf_pol_img$bf,
+#                             bf_combined.pix$bf, bf_race$bf,
+#                             bf_inn$bf, bf_young$bf, bf_mb$bf,
+#                             bf_active.kill$bf, bf_passive.kill$bf, 
+#                             bf_pol$bf, bf_prot$bf, bf_prot_neg$bf,
+#                             bf_combined$bf, bf_combined.w$bf))
+# 
+# tempdf
 ```
 
 Of these 14 model comparisons, just two indicate that the data is in favor of the models with three sources: models for Michael Brown words and Michael Brown Pictures. 
@@ -2500,13 +2601,17 @@ scored_dat %>%
   left_join(df_audience) %>%
   ungroup() -> mod.dat
 
-# m_nb_any <- brm(target_ref~trust_effect_z + Demog + (1|Source),
-#                 data=mod.dat,
-#                 prior = set_prior("normal(0,5)", class = "b"),
-#                 family=negbinomial())
-#  
-# saveRDS(m_nb_any,
-#        './output/negbin_any.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_nb_any <- brm(target_ref~trust_effect_z + Demog + (1|Source),
+                data=mod.dat,
+                prior = set_prior("normal(0,5)", class = "b"),
+                family=negbinomial())
+
+saveRDS(m_nb_any, '../output/negbin_any.RDS')
+}
+#[/MODELS]
+
 m_nb_any <- readRDS('../output/negbin_any.RDS')
 
 m_nb_any_model_mat <- as.matrix(m_nb_any)
@@ -2609,13 +2714,16 @@ scored_dat %>%
   left_join(df_audience) %>%
   ungroup() -> mod.dat
 
-# m_nb_any_pix <- brm(total_refs~trust_effect_z + Demog + (1|Source),
-#                 data=mod.dat,
-#                 prior = set_prior("normal(0,5)", class = "b"),
-#                 family=negbinomial())
-# 
-# saveRDS(m_nb_any_pix,
-#        './output/negbin_any_andpix.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_nb_any_pix <- brm(total_refs~trust_effect_z + Demog + (1|Source),
+                data=mod.dat,
+                prior = set_prior("normal(0,5)", class = "b"),
+                family=negbinomial())
+
+saveRDS(m_nb_any_pix, '../output/negbin_any_andpix.RDS')
+}
+#[/MODELS]
 m_nb_any_pix <- readRDS('../output/negbin_any_andpix.RDS')
 
 target_words <- data.frame(word = c('kill.*', 'gun.*_down', 'mow.*_down', 
@@ -2635,13 +2743,17 @@ scored_dat %>%
   left_join(df_audience) %>%
   ungroup() -> mod.dat
 
-# m_nb_active.kill <- brm(target_ref~trust_effect_z + Demog + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family=negbinomial())
-# 
-# saveRDS(m_nb_active.kill,
-#        './output/active_kill_nb.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_nb_active.kill <- brm(target_ref~trust_effect_z + Demog + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family=negbinomial())
+
+saveRDS(m_nb_active.kill, '../output/active_kill_nb.RDS')
+}
+#[/MODELS]
+
 m_nb_active.kill <- readRDS('../output/active_kill_nb.RDS')
 
 nb_active_kill_model_mat <- as.matrix(m_nb_active.kill)
@@ -2727,13 +2839,17 @@ scored_dat %>%
   left_join(df_audience) %>%
   ungroup() -> mod.dat
 
-# m_nb_passive.kill <- brm(target_ref~trust_effect_z + Demog + (1|Source),
-#                  data=mod.dat,
-#                  prior = set_prior("normal(0,5)", class = "b"),
-#                  family=negbinomial())
-# 
-# saveRDS(m_nb_passive.kill,
-#        './output/passive_kill_nb.RDS')
+#[MODELS]
+if(RUN_MODELS==T){
+m_nb_passive.kill <- brm(target_ref~trust_effect_z + Demog + (1|Source),
+                 data=mod.dat,
+                 prior = set_prior("normal(0,5)", class = "b"),
+                 family=negbinomial())
+
+saveRDS(m_nb_passive.kill, '../output/passive_kill_nb.RDS')
+}
+#[/MODELS]
+
 m_nb_passive.kill <- readRDS('../output/passive_kill_nb.RDS')
 
 nb_passive_kill_model_mat <- as.matrix(m_nb_passive.kill)
@@ -2802,6 +2918,21 @@ We also see that there is an association between political orientation and passi
 
 # Temporal Dynamics
 The shooting has important temporal dynamics that have heretofore been overlooked. For instance, although the fact that a white officer killed a young black man was clear from the beginning, the officer's name was not released until August 15th, a full six days after the shooting. Additionally, protests waxed and waned in the days following the shooting, with some days featuring relatively little activity, and others featuring widespread looting, heavily militarized police, and crackdowns on the press. We want to ensure that our analyses are not being driven by outlier coverage due to some of the more acute events that received heavy press coverage. Accordingly, we now investigate some simple summary plots of key variables from the analyses above, but examine these trends over time.
+
+
+From the preregistration:
+
+>C. Time:
+
+>Due to important temporal dynamics that are fundamental to this particular event, we will
+also explore coverage over time. These analyses serve primarily to ensure that any observed patterns are not due to outliers related to the change in coverage on a particular day (e.g. flare- ups in protest and police response on August 14th and 18th).
+
+>1. Create plots of audience means by day for:
+• Words calculated in Step A1
+• Police/protest images (as in step B7)
+• Combined word/image count calculated in Step B10
+
+>2. Repeat plots for political leaning category (3 conservative, 3 liberal) means
 
 ## Audience type
 ### Police & Protest words
