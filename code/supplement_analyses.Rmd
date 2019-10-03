@@ -17,6 +17,7 @@ library(tidytext)
 library(tidyr)
 library(fuzzyjoin)
 library(cowplot)
+library(rstan)
 library(brms)
 library(tidybayes)
 library(knitr)
@@ -24,6 +25,7 @@ library(kableExtra)
 library(lubridate)
 library(corrplot)  
 library(viridis)
+library(GPArotation)
 
 options(mc.cores = parallel::detectCores())
 
@@ -397,8 +399,8 @@ saveRDS(m_prot2, '../output/tempmod_prot2.RDS')
 m_pol2 <- readRDS('../output/tempmod_pol2.RDS')
 m_prot2 <- readRDS('../output/tempmod_prot2.RDS')
 
-#bf_prot <- bayes_factor(m_prot, m_prot2) #1.46
-#bf_pol <- bayes_factor(m_pol, m_pol2) #23.16
+bf_prot <- bayes_factor(m_prot, m_prot2) #1.46
+bf_pol <- bayes_factor(m_pol, m_pol2) #23.16
 
 
 ```
@@ -745,7 +747,7 @@ saveRDS(m_prot_neg2, '../output/tempmod_prot_neg2.RDS')
 #[/MODELS]
 
 m_prot_neg2 <- readRDS('../output/tempmod_prot_neg2.RDS')
-#bf_prot_neg <- bayes_factor(m_prot_neg, m_prot_neg2) #4.41
+bf_prot_neg <- bayes_factor(m_prot_neg, m_prot_neg2) #4.41
 
 ```
 
