@@ -1009,10 +1009,10 @@ saveRDS(m_prot_img2, '../output/tempmod_prot_img2.RDS')
 #[/MODELS]
 
 m_pol_img2 <- readRDS('../output/tempmod_pol_img2.RDS')
-#bf_pol_img <- bayes_factor(m_pol_img, m_pol_img2) #30.46
+bf_pol_img <- bayes_factor(m_pol_img, m_pol_img2) #30.46
 
 m_prot_img2 <- readRDS('../output/tempmod_prot_img2.RDS')
-#bf_prot_img <- bayes_factor(m_prot_img, m_prot_img2) #23.83
+bf_prot_img <- bayes_factor(m_prot_img, m_prot_img2) #23.83
 
 
 ```
@@ -1252,7 +1252,7 @@ saveRDS(m_combined2, '../output/combined_img_text2.RDS')
 # [/MODELS]
 
 m_combined2 <- readRDS('../output/combined_img_text2.RDS')
-#bf_combined <- bayes_factor(m_combined, m_combined2)
+bf_combined <- bayes_factor(m_combined, m_combined2)
 ```
 
 ##### Removing African-American oriented sources & Adding text type
@@ -1422,7 +1422,7 @@ saveRDS(m_combined.w2, '../output/combined_text2.RDS')
 }
 #[/MODELS]
 m_combined.w2 <- readRDS('../output/combined_text2.RDS')
-#bf_combined.w <- bayes_factor(m_combined.w, m_combined.w2) #4.01
+bf_combined.w <- bayes_factor(m_combined.w, m_combined.w2) #4.01
 ```
 
 
@@ -1548,7 +1548,7 @@ saveRDS(m_combined.pix2,
 #[/MODELS]
 
 m_combined.pix2 <- readRDS('../output/combined_pix2.RDS')
-#bf_combined.pix <- bayes_factor(m_combined.pix, m_combined.pix2) #.01
+bf_combined.pix <- bayes_factor(m_combined.pix, m_combined.pix2) #.01
 
 ```
 
@@ -1703,7 +1703,7 @@ saveRDS(m_active.kill2,
 }
 #[/MODELS]
 m_active.kill2 <- readRDS('../output/active_kill2.RDS')
-#bf_active.kill <- bayes_factor(m_active.kill, m_active.kill2) #17.49
+bf_active.kill <- bayes_factor(m_active.kill, m_active.kill2) #17.49
 
 ```
 
@@ -1910,7 +1910,7 @@ saveRDS(m_passive.kill2, '../output/passive_kill2.RDS')
 }
 #[/MODELS]
 m_passive.kill2 <- readRDS('../output/passive_kill2.RDS')
-#bf_passive.kill <- bayes_factor(m_passive.kill, m_passive.kill2) #1.07
+bf_passive.kill <- bayes_factor(m_passive.kill, m_passive.kill2) #1.07
 
 ```
 
@@ -2116,7 +2116,7 @@ saveRDS(m_race2,'../output/race2.RDS')
 
 m_race <- readRDS('../output/race.RDS')
 m_race2 <- readRDS('../output/race2.RDS')
-#bf_race <- bayes_factor(m_race, m_race2)
+bf_race <- bayes_factor(m_race, m_race2)
 
 
 mod.dat %>% 
@@ -2148,7 +2148,7 @@ saveRDS(m_inn2,'../output/innocence2.RDS')
 #[/MODELS]
 m_inn <- readRDS('../output/innocence.RDS')
 m_inn2 <- readRDS('../output/innocence2.RDS')
-#bf_inn <- bayes_factor(m_inn, m_inn2)
+bf_inn <- bayes_factor(m_inn, m_inn2)
 
 mod.dat %>% 
   ungroup() %>%
@@ -2180,7 +2180,7 @@ saveRDS(m_young2, '../output/young2.RDS')
 
 m_young <- readRDS('../output/young.RDS')
 m_young2 <- readRDS('../output/young2.RDS')
-#bf_young <- bayes_factor(m_young, m_young2)
+bf_young <- bayes_factor(m_young, m_young2)
 
 mod.dat %>% 
   ungroup() %>%
@@ -2211,7 +2211,7 @@ saveRDS(m_mb2, '../output/mb2.RDS')
 #[/MODELS]
 m_mb <- readRDS('../output/mb.RDS')
 m_mb2 <- readRDS('../output/mb2.RDS')
-#bf_mb <- bayes_factor(m_mb, m_mb2)
+bf_mb <- bayes_factor(m_mb, m_mb2)
 
 mod.dat %>% 
   ungroup() %>%
@@ -2505,22 +2505,22 @@ Because there are likely some differences in the way that North American and Eur
 We ran model comparisons for models of police and protest words, disruptive protest words, police and protest images, legitimizing words and images, legitimizing words, michael brown images, injunctive and descriptive death verbs, and words for race, innocence, young, and references to Michael Brown's name
 
 ```{r bf}
-# tempdf <- data.frame(model = c('Protest Images', 'Police Images', 
-#                                'Michael Brown Images', 'Race Words', 
-#                                'Unarmed Words', 'Youth Words', 
-#                                'Michael Brown Words', 'Injunctive Death Verbs',
-#                                'Descriptive Death Verbs', 'Police Words', 
-#                                'Protest Words', 'Disruptive Protest Words',
-#                                'Legitimizing Words and Images', 
-#                                'Legitimizing Words'),
-#                      bf = c(bf_prot_img$bf, bf_pol_img$bf,
-#                             bf_combined.pix$bf, bf_race$bf,
-#                             bf_inn$bf, bf_young$bf, bf_mb$bf,
-#                             bf_active.kill$bf, bf_passive.kill$bf, 
-#                             bf_pol$bf, bf_prot$bf, bf_prot_neg$bf,
-#                             bf_combined$bf, bf_combined.w$bf))
-# 
-# tempdf
+tempdf <- data.frame(model = c('Protest Images', 'Police Images',
+                               'Michael Brown Images', 'Race Words',
+                               'Unarmed Words', 'Youth Words',
+                               'Michael Brown Words', 'Injunctive Death Verbs',
+                               'Descriptive Death Verbs', 'Police Words',
+                               'Protest Words', 'Disruptive Protest Words',
+                               'Legitimizing Words and Images',
+                               'Legitimizing Words'),
+                     bf = c(bf_prot_img$bf, bf_pol_img$bf,
+                            bf_combined.pix$bf, bf_race$bf,
+                            bf_inn$bf, bf_young$bf, bf_mb$bf,
+                            bf_active.kill$bf, bf_passive.kill$bf,
+                            bf_pol$bf, bf_prot$bf, bf_prot_neg$bf,
+                            bf_combined$bf, bf_combined.w$bf))
+
+tempdf
 ```
 
 Of these 14 model comparisons, just two indicate that the data is in favor of the models with three sources: models for Michael Brown words and Michael Brown Pictures. 
